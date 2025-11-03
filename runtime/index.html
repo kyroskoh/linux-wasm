@@ -155,7 +155,7 @@ Examples: ls          watch uptime              head /proc/cpuinfo
     <h2>What are the limitations?</h2>
     <p>
       As mentioned above, no interruptions of tasks are possible. No MMU, every process and the kernel lives in the same
-      address space. Wasm is a more or less a strict Harward architecture, where code can be loaded but not modified at
+      address space. Wasm is a more or less a strict Harvard architecture, where code can be loaded but not modified at
       runtime. JIT compilation could in theory still work, you would just need to compile the code before launching it,
       but no runtime patching would be allowed (for example, the <i>jump label</i> kernel feature would not work well).
     </p>
