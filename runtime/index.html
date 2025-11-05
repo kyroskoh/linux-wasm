@@ -192,8 +192,8 @@ Examples: ls          watch uptime              head /proc/cpuinfo
     <h2>How does this differ from previous attempts?</h2>
     <p>
       Linux in the browser has been done a few times before, either by slow emulation of other architectures in Wasm or
-      even pure JavaScript, or by running Linux as a library (LKL aka. um). Such attempts have inspired this more direct
-      direct approach. The goal is to expose the syscalls that the Linux kernel provides. This should allow porting of
+      even pure JavaScript, or by running Linux as a library (LKL aka. um). Such attempts have inspired this more direct 
+      approach. The goal is to expose the syscalls that the Linux kernel provides. This should allow porting of
       many more programs than possible with WASI or the current generation of Emscripten. Note that a program does not
       necessarily have to run as a process inside Linux either, you could have just one (or a few) frontend threads that
       you use for syscalls, possibly via some kind of message passing. This way, your program does not have to live
