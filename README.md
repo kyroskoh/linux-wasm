@@ -1,5 +1,5 @@
 # Scripts for Building a Linux/Wasm Operating System
-This project contains scripts to download, build and run a Linux system that can executed on the web, using native WebAssembly (Wasm).
+This project contains scripts to download, build and run a Linux system that can be executed on the web, using native WebAssembly (Wasm).
 
 These scripts can be run in the following way:
 * Directly on a host machine.
