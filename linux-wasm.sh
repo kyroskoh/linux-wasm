@@ -53,7 +53,6 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
     "fetch-kernel"|"all-kernel"|"fetch"|"all")
         mkdir -p "$LW_SRC/kernel"
         git clone -b v6.4.16 $LW_GITFLAGS https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git "$LW_SRC/kernel"
-        git -C "$LW_SRC/kernel" am < "$LW_ROOT/patches/kernel/0009-HACK-Workaround-broken-wq_worker_comm.patch"
         git -C "$LW_SRC/kernel" am < "$LW_ROOT/patches/kernel/0001-Always-access-the-instruction-pointer-intrinsic-via-.patch"
         git -C "$LW_SRC/kernel" am < "$LW_ROOT/patches/kernel/0002-Allow-architecture-specific-panic-handling.patch"
         git -C "$LW_SRC/kernel" am < "$LW_ROOT/patches/kernel/0003-Add-missing-processor.h-include-for-asm-generic-barr.patch"
