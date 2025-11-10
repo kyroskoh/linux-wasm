@@ -112,11 +112,61 @@ Stack switching would enable:
 - **Coroutines and fiber support** for lightweight concurrency
 - **Better signal handling** through controlled stack manipulation
 - **Efficient system call implementation** without blocking
+- **Proper double-return semantics** for fork/vfork and setjmp/longjmp
 
 **Current State**: The proposal exists but needs tweaks to make it fully compatible with Linux kernel requirements. With proper community engagement, this could be adapted for OS use cases.
 
+**Current Workaround in Linux/Wasm**:
+
+Linux/Wasm currently **does not support** double-return semantics (fork/vfork, setjmp/longjmp), even though LLVM supports it with runtime help. The decision was made because:
+- Current approaches are clumsy and slow (though Emscripten has proven they work)
+- The Stack Switching proposal promises a proper solution
+- The functionality isn't critical enough to warrant the performance cost
+
+**The `clone()` Syscall Alternative**:
+
+Instead of traditional fork/vfork, Linux/Wasm uses the `clone()` syscall, which is better suited for WebAssembly:
+
+```c
+// Traditional approach (not supported):
+pid_t pid = fork();   // Double-return on same stack
+pid_t pid = vfork();  // Double-return on same stack
+
+// Linux/Wasm approach:
+pid_t pid = clone(child_fn, child_stack, flags, arg);  // Single return
+```
+
+**Why `clone()` is Superior**:
+
+1. **Separate Stack for Child** - You provide a separate stack pointer for the child function
+   - Makes clone-based vforks **much safer** than traditional vforks
+   - Allows calling functions in vfork (forbidden in traditional vfork)
+   - No stack corruption from double-return
+
+2. **Flexible Flags** - Different flags achieve different behaviors:
+   - `CLONE_VFORK` - vfork-like behavior (parent waits for child)
+   - `CLONE_VM` - fork-like behavior (shared memory, used by pthreads)
+   - Combinations achieve both fork and vfork semantics
+
+3. **BusyBox Example**:
+   ```c
+   // BusyBox Wasm port swaps vfork() for:
+   clone(child_fn, child_stack, CLONE_VFORK, args);
+   ```
+
+**Advantages over Traditional fork/vfork**:
+- No need for double-return emulation
+- Better performance (no setjmp/longjmp overhead)
+- More explicit control over child process behavior
+- Safer memory management with separate stacks
+- Already supported by Linux kernel
+
+**When Stack Switching Arrives**:
+The Stack Switching proposal will make these operations even more elegant and performant, but `clone()` already provides a solid, safe foundation today.
+
 **Resources**:
 - [Stack Switching Proposal](https://github.com/WebAssembly/stack-switching)
+- [clone(2) man page](https://man7.org/linux/man-pages/man2/clone.2.html)
 
 ### Memory Control
 **Status**: Proposal in progress  
@@ -217,6 +267,36 @@ For broader WebAssembly improvements:
 | Execution State Hibernation | High | High (needs proposal) | Critical - instant boot & persistence |
 
 **Note**: Active proposals are closer to reality and offer the best opportunity for community engagement to shape them for OS use cases.
+
+---
+
+## Implementation Philosophy
+
+### Pragmatic Approach to WebAssembly Limitations
+
+Linux/Wasm takes a pragmatic approach when WebAssembly features are missing:
+
+**Principle**: Avoid slow emulation when elegant alternatives exist.
+
+**Example - fork/vfork**:
+- ❌ **Not Used**: Slow setjmp/longjmp-based emulation (Emscripten approach)
+- ✅ **Chosen**: Native `clone()` syscall with explicit stacks
+- **Rationale**: Better performance, safer semantics, already kernel-supported
+
+**Example - Execution State**:
+- 🔄 **Current**: Possible via emulation (like setjmp/longjmp)
+- 🎯 **Future**: Wait for native browser support
+- **Rationale**: Feature is transformative enough to warrant waiting for proper implementation
+
+**When to Emulate vs Wait**:
+- **Emulate**: If performance is acceptable and feature is critical
+- **Use Alternative**: If a better native approach exists (like clone)
+- **Wait for Proposal**: If feature is important but not critical, and a proposal is in progress
+
+This philosophy prioritizes:
+1. **Performance** - Avoid slow emulation layers
+2. **Safety** - Prefer explicit, type-safe APIs
+3. **Future-proofing** - Support proposals that will eventually become standard
 
 ---
 
