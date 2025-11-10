@@ -50,7 +50,7 @@ Textured quad rendering with procedural checkerboard texture.
 ./tools/compile-graphics.sh runtime/examples/example-texture.c
 ```
 
-### example-cube.c ⭐ **Showcase Demo**
+### example-cube.c
 Spinning 3D textured cube with lighting and depth testing.
 
 **Features:**
@@ -66,6 +66,32 @@ Spinning 3D textured cube with lighting and depth testing.
 ```bash
 ./tools/compile-graphics.sh runtime/examples/example-cube.c
 ```
+
+### example-demo.c 🌟 **SHOWCASE DEMO** 
+Multi-cube demonstration showcasing full 3D capabilities.
+
+**Features:**
+- **7 Cubes** with unique textures and colors
+- **Camera Orbit** - Smooth circular camera motion
+- **Per-Cube Properties** - Different rotation speeds, scales, positions
+- **Color Tinting** - Shader-based color modification
+- **FPS Counter** - Real-time performance metrics
+- **Procedural Textures** - Unique texture for each cube
+- **Comprehensive Lighting** - Per-vertex lighting with normals
+- **Professional Output** - Formatted console with emojis
+
+**Compile:**
+```bash
+./tools/compile-graphics.sh runtime/examples/example-demo.c
+```
+
+**What it demonstrates:**
+- Multiple objects in single scene
+- Dynamic camera movement
+- Efficient rendering (7 cubes @ 60 FPS)
+- Advanced matrix transformations
+- Texture management
+- Real-time animation
 
 ## Creating Your Own Examples
 
@@ -102,4 +128,22 @@ All examples in this directory are automatically compiled when you run:
 ```
 
 The compiled `.wasm` files are automatically copied to the initramfs for easy testing.
+
+## Running the Examples
+
+After building the system and examples:
+
+```bash
+# Start the Linux/Wasm system
+# Open runtime/index.html in your browser
+
+# In the Linux/Wasm terminal, run:
+/bin/example-graphics.wasm    # Color animation
+/bin/example-shaders.wasm     # Colored triangle
+/bin/example-texture.wasm     # Textured quad
+/bin/example-cube.wasm        # Single spinning cube
+/bin/example-demo.wasm        # ⭐ Multi-cube showcase
+```
+
+**Recommended:** Start with `example-demo.wasm` for the most impressive demonstration!
 

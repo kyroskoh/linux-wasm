@@ -294,6 +294,24 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
             fi
         fi
         
+        # Compile example-demo.c
+        if [ -f "$LW_ROOT/runtime/examples/example-demo.c" ]; then
+            "$LW_INSTALL/llvm/bin/clang" \
+                --target=wasm32-unknown-unknown \
+                "--sysroot=$LW_INSTALL/musl" \
+                -fPIC -shared \
+                $LW_DEBUG_CFLAGS \
+                -o "$LW_INSTALL/graphics-examples/example-demo.wasm" \
+                "$LW_ROOT/runtime/examples/example-demo.c"
+            echo "Built example-demo.wasm"
+            
+            # Copy to busybox for inclusion in initramfs (if busybox is built)
+            if [ -d "$LW_INSTALL/busybox/bin" ]; then
+                cp "$LW_INSTALL/graphics-examples/example-demo.wasm" "$LW_INSTALL/busybox/bin/"
+                echo "Copied example-demo.wasm to busybox/bin/"
+            fi
+        fi
+        
         # Copy graphics header for reference
         cp "$LW_ROOT/runtime/wasm-graphics.h" "$LW_INSTALL/graphics-examples/"
         echo "Graphics examples built successfully!"
