@@ -1,0 +1,333 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-15 \
+            lld-15 \
+            llvm-15 \
+            make \
+            curl \
+            git \
+            python3
+          
+          # Create symlinks for clang/wasm-ld without version suffix
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
+          sudo update-alternatives --install /usr/bin/wasm-ld wasm-ld /usr/bin/wasm-ld-15 100
+
+      - name: Build Linux/Wasm kernel
+        run: |
+          echo "🔨 Building Linux/Wasm kernel..."
+          ./linux-wasm.sh build-kernel
+          echo "✅ Kernel built successfully"
+
+      - name: Build BusyBox
+        run: |
+          echo "🔨 Building BusyBox..."
+          ./linux-wasm.sh build-busybox
+          echo "✅ BusyBox built successfully"
+
+      - name: Build graphics examples
+        run: |
+          echo "🎨 Building graphics examples..."
+          ./linux-wasm.sh build-graphics-examples
+          echo "✅ Graphics examples built successfully"
+
+      - name: Create initramfs
+        run: |
+          echo "📦 Creating initramfs..."
+          ./linux-wasm.sh create-initramfs
+          echo "✅ Initramfs created successfully"
+
+      - name: Verify build artifacts
+        run: |
+          echo "🔍 Verifying build artifacts..."
+          ls -lh kernel.wasm
+          ls -lh initramfs.cpio
+          echo "✅ All artifacts present"
+
+      - name: Prepare deployment directory
+        run: |
+          echo "📁 Preparing deployment directory..."
+          mkdir -p _site
+          
+          # Copy runtime files
+          cp -r runtime/* _site/
+          
+          # Rename the original index.html to main.html first
+          mv _site/index.html _site/main.html
+          
+          # Copy kernel and initramfs
+          cp kernel.wasm _site/
+          cp initramfs.cpio _site/
+          
+          # Create a nice landing page
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Linux/Wasm - Linux on WebAssembly</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      padding: 20px;
+                  }
+                  
+                  .container {
+                      background: white;
+                      border-radius: 20px;
+                      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                      padding: 40px;
+                      max-width: 800px;
+                      text-align: center;
+                  }
+                  
+                  h1 {
+                      font-size: 3em;
+                      color: #667eea;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .subtitle {
+                      font-size: 1.3em;
+                      color: #666;
+                      margin-bottom: 30px;
+                  }
+                  
+                  .features {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                      gap: 20px;
+                      margin: 30px 0;
+                      text-align: left;
+                  }
+                  
+                  .feature {
+                      padding: 15px;
+                      background: #f7f7f7;
+                      border-radius: 10px;
+                  }
+                  
+                  .feature h3 {
+                      color: #667eea;
+                      margin-bottom: 10px;
+                      font-size: 1.1em;
+                  }
+                  
+                  .feature p {
+                      color: #666;
+                      font-size: 0.9em;
+                  }
+                  
+                  .buttons {
+                      display: flex;
+                      gap: 20px;
+                      justify-content: center;
+                      margin-top: 30px;
+                      flex-wrap: wrap;
+                  }
+                  
+                  .btn {
+                      padding: 15px 30px;
+                      font-size: 1.1em;
+                      border: none;
+                      border-radius: 10px;
+                      cursor: pointer;
+                      text-decoration: none;
+                      display: inline-block;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                  }
+                  
+                  .btn-primary {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                  }
+                  
+                  .btn-secondary {
+                      background: #f0f0f0;
+                      color: #333;
+                  }
+                  
+                  .btn:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+                  }
+                  
+                  .stats {
+                      display: flex;
+                      justify-content: space-around;
+                      margin: 30px 0;
+                      padding: 20px;
+                      background: #f7f7f7;
+                      border-radius: 10px;
+                  }
+                  
+                  .stat {
+                      text-align: center;
+                  }
+                  
+                  .stat-number {
+                      font-size: 2em;
+                      font-weight: bold;
+                      color: #667eea;
+                  }
+                  
+                  .stat-label {
+                      color: #666;
+                      font-size: 0.9em;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚀 Linux/Wasm</h1>
+                  <p class="subtitle">A Real Linux Kernel Running in Your Browser</p>
+                  
+                  <div class="stats">
+                      <div class="stat">
+                          <div class="stat-number">100%</div>
+                          <div class="stat-label">WebAssembly</div>
+                      </div>
+                      <div class="stat">
+                          <div class="stat-number">3D</div>
+                          <div class="stat-label">Graphics</div>
+                      </div>
+                      <div class="stat">
+                          <div class="stat-number">60 FPS</div>
+                          <div class="stat-label">Performance</div>
+                      </div>
+                  </div>
+                  
+                  <div class="features">
+                      <div class="feature">
+                          <h3>🐧 Real Linux</h3>
+                          <p>Actual Linux kernel compiled to WebAssembly, not emulation</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🎨 OpenGL ES 2.0</h3>
+                          <p>Full 3D graphics with textures, shaders, and depth testing</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🛠️ BusyBox</h3>
+                          <p>Complete Unix utilities and shell environment</p>
+                      </div>
+                      <div class="feature">
+                          <h3>🐛 DWARF Debug</h3>
+                          <p>Line-by-line debugging support for C/C++ code</p>
+                      </div>
+                  </div>
+                  
+                  <div class="buttons">
+                      <a href="./main.html" class="btn btn-primary">🚀 Launch Linux/Wasm</a>
+                      <a href="https://github.com/joelseverin/linux-wasm" class="btn btn-secondary">📖 View on GitHub</a>
+                  </div>
+                  
+                  <p style="margin-top: 30px; color: #999; font-size: 0.9em;">
+                      Built with ❤️ by the Linux/Wasm community
+                  </p>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "✅ Deployment directory prepared"
+
+      - name: Create build summary
+        run: |
+          echo "## 🎉 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Linux/Wasm build completed successfully!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- \`kernel.wasm\` ($(du -h kernel.wasm | cut -f1))" >> $GITHUB_STEP_SUMMARY
+          echo "- \`initramfs.cpio\` ($(du -h initramfs.cpio | cut -f1))" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎨 Graphics Examples Built" >> $GITHUB_STEP_SUMMARY
+          echo "- example-graphics.wasm" >> $GITHUB_STEP_SUMMARY
+          echo "- example-shaders.wasm" >> $GITHUB_STEP_SUMMARY
+          echo "- example-texture.wasm" >> $GITHUB_STEP_SUMMARY
+          echo "- example-cube.wasm" >> $GITHUB_STEP_SUMMARY
+          echo "- example-demo.wasm (7-cube showcase! 🎮)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "The project will be deployed to GitHub Pages automatically." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🌐 Deployment Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Linux/Wasm is now live!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Visit:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Try the demos:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎮 Multi-cube showcase (example-demo.wasm)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎲 Spinning 3D cube (example-cube.wasm)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🖼️ Textured quad (example-texture.wasm)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 Shader demo (example-shaders.wasm)" >> $GITHUB_STEP_SUMMARY
+

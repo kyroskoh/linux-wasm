@@ -1,6 +1,8 @@
 # Scripts for Building a Linux/Wasm Operating System
 This project contains scripts to download, build and run a Linux system that can be executed on the web, using native WebAssembly (Wasm).
 
+**🚀 Try it live:** [https://kyroskoh.github.io/linux-wasm/](https://kyroskoh.github.io/linux-wasm/) - No installation needed!
+
 **🎨 New:** Full 3D graphics with textures and depth testing! Spinning cube demo showcases complete OpenGL ES 2.0 pipeline. Includes shaders, textures, lighting, and matrix transformations. See [example-cube.c](runtime/examples/example-cube.c), [Graphics Documentation](runtime/GRAPHICS.md), and [Roadmap](ROADMAP.md).
 
 **📋 Interested in WebAssembly's future?** Check out our [WebAssembly Wish List](WISHLIST.md) for features that would benefit Linux/Wasm and the broader Wasm ecosystem.
@@ -63,6 +65,13 @@ The project is built and assembled from following pieces of software:
 Hint: Wasm lacks an MMU, meaning that Linux needs to be built in a NOMMU configuration. Wasm programs thus need to be built using -fPIC/-shared. Alternatively, existing Wasm programs can run together with a proxy that does syscalls towards the kernel. In such a case, each thread that wishes to independently execute syscalls should map to a thread in the proxy. The drawback of such an approach is that memory cannot be mapped and shared between processes. However, from a memory protection standpoint, this property could also be beneficial.
 
 ## Running
+
+### Try Online
+Visit [https://kyroskoh.github.io/linux-wasm/](https://kyroskoh.github.io/linux-wasm/) to try Linux/Wasm directly in your browser - no installation needed!
+
+Want to deploy your own? See [GITHUB-PAGES-SETUP.md](GITHUB-PAGES-SETUP.md) for a complete guide to setting up automatic deployment.
+
+### Build Locally
 Run ./linux-wasm.sh to see usage. Downloads happen first, building afterwards. You may partially select what to download or (re)-build.
 
 Due to a bug in LLVM's build system, building LLVM a second time fails when building runtimes (complaining that clang fails to build a simple test program). A workaround is to build it yet again (it works each other time, i.e. the 1st, 3rd, 5th etc. time).
