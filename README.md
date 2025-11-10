@@ -3,6 +3,8 @@ This project contains scripts to download, build and run a Linux system that can
 
 **🎨 New:** Full 3D graphics with textures and depth testing! Spinning cube demo showcases complete OpenGL ES 2.0 pipeline. Includes shaders, textures, lighting, and matrix transformations. See [example-cube.c](runtime/examples/example-cube.c), [Graphics Documentation](runtime/GRAPHICS.md), and [Roadmap](ROADMAP.md).
 
+**📋 Interested in WebAssembly's future?** Check out our [WebAssembly Wish List](WISHLIST.md) for features that would benefit Linux/Wasm and the broader Wasm ecosystem.
+
 These scripts can be run in the following way:
 * Directly on a host machine.
 * In a generic docker container.

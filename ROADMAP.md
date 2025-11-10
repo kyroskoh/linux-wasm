@@ -613,6 +613,22 @@ $LW_INSTALL/llvm/bin/clang++ \
 
 ---
 
+## WebAssembly Wish List
+
+Some features in this roadmap are limited by current WebAssembly capabilities. We've compiled a list of desired WebAssembly features that would significantly benefit Linux/Wasm:
+
+- **MMU Support** - For memory sharing and protection
+- **Thread Suspension** - For proper signal handling and debugging
+- **ELF Binary Format** - For better tool compatibility
+- **Shared Wasm Instances** - For resource optimization
+- **Memory Address Breakpoints** - For enhanced debugging
+
+See **[WISHLIST.md](WISHLIST.md)** for detailed explanations and impact assessments.
+
+These features would unlock new capabilities for Linux/Wasm and the broader WebAssembly ecosystem.
+
+---
+
 ## Contributing
 
 This roadmap is a living document. Contributions and suggestions are welcome!
