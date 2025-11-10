@@ -42,6 +42,10 @@ LW_INSTALL="$(realpath -sm "$LW_INSTALL")"
 : "${LW_JOBS_MUSL_COMPILE:=8}"
 : "${LW_JOBS_BUSYBOX_COMPILE:=8}"
 
+# Debug flags for DWARF support (enable line-by-line debugging in C code)
+# Use -g3 for maximum debug information including macro definitions
+: "${LW_DEBUG_CFLAGS:=-g3}"
+
 handled=0
 case "$1" in # note use of ;;& meaning that each case is re-tested (can hit multiple times)!
     "fetch-llvm"|"all-llvm"|"fetch"|"all")
@@ -128,6 +132,7 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
         LW_KERNEL_MAKE+=" LLVM=$LW_INSTALL/llvm/bin/"
         LW_KERNEL_MAKE+=" CROSS_COMPILE=wasm32-unknown-unknown-"
         LW_KERNEL_MAKE+=" HOSTCC=gcc"
+        LW_KERNEL_MAKE+=" KCFLAGS='$LW_DEBUG_CFLAGS'"
         (
             cd "$LW_SRC/kernel"
             #$LW_KERNEL_MAKE menuconfig
@@ -151,7 +156,7 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
             # Note how we build --disable-shared (i.e. disable dynamic linking by musl) but with -fPIC and -shared.
             CROSS_COMPILE="$LW_INSTALL/llvm/bin/llvm-" \
     	    CC="$LW_INSTALL/llvm/bin/clang" \
-    	    CFLAGS="--target=wasm32-unknown-unknown -Xclang -target-feature -Xclang +atomics -Xclang -target-feature -Xclang +bulk-memory -fPIC -Wl,-shared" \
+    	    CFLAGS="--target=wasm32-unknown-unknown -Xclang -target-feature -Xclang +atomics -Xclang -target-feature -Xclang +bulk-memory -fPIC -Wl,-shared $LW_DEBUG_CFLAGS" \
 	        LIBCC="--rtlib=compiler-rt" \
 	        "$LW_SRC/musl/configure" --target=wasm --prefix=/ --disable-shared "--srcdir=$LW_SRC/musl"
             make -j $LW_JOBS_MUSL_COMPILE 
@@ -182,7 +187,7 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
             # The path escaping is a bit tricky but this seems to work... somehow...
             make "O=$LW_BUILD/busybox" ARCH=wasm "CONFIG_PREFIX=$LW_INSTALL/busybox" \
                 "CROSS_COMPILE=$LW_INSTALL/llvm/bin/" "CONFIG_SYSROOT=$LW_INSTALL/musl" \
-                CONFIG_EXTRA_CFLAGS="$CFLAGS -isystem '$LW_INSTALL/busybox-kernel-headers' -D__linux__ -fPIC" \
+                CONFIG_EXTRA_CFLAGS="$CFLAGS -isystem '$LW_INSTALL/busybox-kernel-headers' -D__linux__ -fPIC $LW_DEBUG_CFLAGS" \
                 $CMD
         done
     handled=1;;&
@@ -238,6 +243,7 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
         echo "LW_BUILD=$LW_BUILD"
         echo "LW_INSTALL=$LW_INSTALL"
         echo "LW_GITFLAGS=$LW_GITFLAGS"
+        echo "LW_DEBUG_CFLAGS=$LW_DEBUG_CFLAGS (DWARF debug info for line-by-line debugging)"
         echo "---------------"
         exit 1
     handled=1;;&

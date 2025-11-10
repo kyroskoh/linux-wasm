@@ -64,6 +64,9 @@ Due to a bug in LLVM's build system, building LLVM a second time fails when buil
 
 Due to limitations in the Linux kernel's build system, the absolute path of the cross compiler (install path of LLVM) cannot contain spaces. Since LLVM is built by linux-wasm.sh, it more or less means its workspace directory (or at least install directory) has to be in a space free path.
 
+### Debug Support
+The build system includes DWARF debug information by default, enabling line-by-line debugging in the C code (kernel, musl, BusyBox). The debug flags can be customized by setting the `LW_DEBUG_CFLAGS` environment variable (default: `-g3` for maximum debug information including macro definitions). To build without debug information, set `LW_DEBUG_CFLAGS=""` before running the build script.
+
 ### Docker
 The following commands should be executed in this repo root.
 
