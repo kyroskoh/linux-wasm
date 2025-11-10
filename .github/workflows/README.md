@@ -72,8 +72,7 @@ To enable automatic deployment:
 
 5. **Access Your Site**
    - After successful deployment, your site will be available at:
-   - `https://<username>.github.io/<repository-name>/`
-   - Example: `https://joelseverin.github.io/linux-wasm/`
+   - `https://kyroskoh.github.io/linux-wasm/`
 
 ### Build Summary
 

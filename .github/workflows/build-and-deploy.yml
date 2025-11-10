@@ -49,11 +49,35 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
           sudo update-alternatives --install /usr/bin/wasm-ld wasm-ld /usr/bin/wasm-ld-15 100
 
+      - name: Fetch all sources
+        run: |
+          echo "📥 Downloading and patching all sources..."
+          ./linux-wasm.sh fetch
+          echo "✅ All sources fetched successfully"
+
+      - name: Build LLVM toolchain
+        run: |
+          echo "🔧 Building LLVM toolchain (this may take a few minutes)..."
+          ./linux-wasm.sh build-llvm
+          echo "✅ LLVM toolchain built successfully"
+
       - name: Build Linux/Wasm kernel
         run: |
           echo "🔨 Building Linux/Wasm kernel..."
           ./linux-wasm.sh build-kernel
           echo "✅ Kernel built successfully"
+
+      - name: Build musl libc
+        run: |
+          echo "🔨 Building musl libc..."
+          ./linux-wasm.sh build-musl
+          echo "✅ musl libc built successfully"
+
+      - name: Build BusyBox kernel headers
+        run: |
+          echo "🔨 Building BusyBox kernel headers..."
+          ./linux-wasm.sh build-busybox-kernel-headers
+          echo "✅ BusyBox kernel headers built successfully"
 
       - name: Build BusyBox
         run: |
@@ -267,7 +291,7 @@ jobs:
                   
                   <div class="buttons">
                       <a href="./main.html" class="btn btn-primary">🚀 Launch Linux/Wasm</a>
-                      <a href="https://github.com/joelseverin/linux-wasm" class="btn btn-secondary">📖 View on GitHub</a>
+                      <a href="https://github.com/kyroskoh/linux-wasm" class="btn btn-secondary">📖 View on GitHub</a>
                   </div>
                   
                   <p style="margin-top: 30px; color: #999; font-size: 0.9em;">
@@ -286,16 +310,23 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ **Linux/Wasm build completed successfully!**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Build Components" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ LLVM 18.1.2 (clang, wasm-ld, compiler-rt)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux kernel 6.4.16 (Wasm architecture)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ musl libc 1.2.5" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ BusyBox 1.36.1" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Graphics examples (5 demos)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Build Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "- \`kernel.wasm\` ($(du -h kernel.wasm | cut -f1))" >> $GITHUB_STEP_SUMMARY
           echo "- \`initramfs.cpio\` ($(du -h initramfs.cpio | cut -f1))" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎨 Graphics Examples Built" >> $GITHUB_STEP_SUMMARY
-          echo "- example-graphics.wasm" >> $GITHUB_STEP_SUMMARY
-          echo "- example-shaders.wasm" >> $GITHUB_STEP_SUMMARY
-          echo "- example-texture.wasm" >> $GITHUB_STEP_SUMMARY
-          echo "- example-cube.wasm" >> $GITHUB_STEP_SUMMARY
-          echo "- example-demo.wasm (7-cube showcase! 🎮)" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎨 Graphics Examples" >> $GITHUB_STEP_SUMMARY
+          echo "- example-graphics.wasm - Color animation" >> $GITHUB_STEP_SUMMARY
+          echo "- example-shaders.wasm - Colored triangle" >> $GITHUB_STEP_SUMMARY
+          echo "- example-texture.wasm - Textured quad" >> $GITHUB_STEP_SUMMARY
+          echo "- example-cube.wasm - Spinning 3D cube" >> $GITHUB_STEP_SUMMARY
+          echo "- example-demo.wasm - 7-cube showcase! 🎮✨" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Deployment" >> $GITHUB_STEP_SUMMARY
           echo "The project will be deployed to GitHub Pages automatically." >> $GITHUB_STEP_SUMMARY

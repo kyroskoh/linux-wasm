@@ -49,9 +49,9 @@ https://<your-username>.github.io/<repository-name>/
 ```
 
 For example:
-- Username: `joelseverin`
+- Username: `kyroskoh`
 - Repository: `linux-wasm`
-- URL: `https://joelseverin.github.io/linux-wasm/`
+- URL: `https://kyroskoh.github.io/linux-wasm/`
 
 ## What Gets Deployed
 
