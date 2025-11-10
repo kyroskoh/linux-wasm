@@ -247,6 +247,101 @@
       let console_read_count = Atomics.load(console_read_messenger, 0);
       return console_read_count;
     },
+
+    // Host callbacks for Wasm graphics/framebuffer driver (EGL/OpenGL ES support)
+    
+    wasm_graphics_init: () => {
+      // Initialize graphics subsystem
+      port.postMessage({
+        method: "graphics_init",
+      });
+      return 0; // Success
+    },
+
+    wasm_graphics_swap_buffers: () => {
+      // Request buffer swap (present frame)
+      port.postMessage({
+        method: "graphics_swap_buffers",
+      });
+      return 0; // Success
+    },
+
+    // EGL-like interface callbacks
+    wasm_egl_get_display: () => {
+      // Return a display ID (simplified: always return 1 for default display)
+      return 1;
+    },
+
+    wasm_egl_initialize: (display, major, minor) => {
+      // Write back version info if pointers are valid
+      if (major && minor) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(major, 1, true); // EGL major version 1
+        memory_view.setInt32(minor, 5, true); // EGL minor version 5
+      }
+      return 1; // EGL_TRUE
+    },
+
+    wasm_egl_choose_config: (display, attrib_list, configs, config_size, num_config) => {
+      // Simplified: return a dummy config
+      if (configs && config_size > 0) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(configs, 1, true); // Config ID 1
+      }
+      if (num_config) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(num_config, 1, true); // 1 config available
+      }
+      return 1; // EGL_TRUE
+    },
+
+    wasm_egl_create_window_surface: (display, config, window, attrib_list) => {
+      // Return a surface ID (simplified: use incrementing IDs)
+      return 1; // Surface ID
+    },
+
+    wasm_egl_create_context: (display, config, share_context, attrib_list) => {
+      // Return a context ID (simplified: use incrementing IDs)
+      return 1; // Context ID
+    },
+
+    wasm_egl_make_current: (display, draw, read, context) => {
+      // Make context current (WebGL is always current in our simplified model)
+      return 1; // EGL_TRUE
+    },
+
+    wasm_egl_swap_buffers: (display, surface) => {
+      // Swap buffers
+      port.postMessage({
+        method: "graphics_swap_buffers",
+      });
+      return 1; // EGL_TRUE
+    },
+
+    // OpenGL ES callback helpers (these forward to the main thread)
+    wasm_gl_clear: (mask) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "clear",
+        args: [mask],
+      });
+    },
+
+    wasm_gl_clear_color: (r, g, b, a) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "clearColor",
+        args: [r, g, b, a],
+      });
+    },
+
+    wasm_gl_viewport: (x, y, width, height) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "viewport",
+        args: [x, y, width, height],
+      });
+    },
   };
 
   /// Callbacks from the main thread.

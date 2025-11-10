@@ -54,6 +54,7 @@ The project is built and assembled from following pieces of software:
         * Some example code of how a minimal JavaScript Wasm host could look like.
         * Error handling is not very graceful, more geared towards debugging than user experience.
         * This is the glue code that kicks everything off, spawns web workers, creates Wasm instances etc.
+        * Includes graphics support with EGL/OpenGL ES interface backed by WebGL (see runtime/GRAPHICS.md).
 
 Hint: Wasm lacks an MMU, meaning that Linux needs to be built in a NOMMU configuration. Wasm programs thus need to be built using -fPIC/-shared. Alternatively, existing Wasm programs can run together with a proxy that does syscalls towards the kernel. In such a case, each thread that wishes to independently execute syscalls should map to a thread in the proxy. The drawback of such an approach is that memory cannot be mapped and shared between processes. However, from a memory protection standpoint, this property could also be beneficial.
 
@@ -67,6 +68,27 @@ Due to limitations in the Linux kernel's build system, the absolute path of the 
 ### Debug Support
 The build system includes DWARF debug information by default, enabling line-by-line debugging in the C code (kernel, musl, BusyBox). The debug flags can be customized by setting the `LW_DEBUG_CFLAGS` environment variable (default: `-g3` for maximum debug information including macro definitions). To build without debug information, set `LW_DEBUG_CFLAGS=""` before running the build script.
 
+### Graphics Support
+The runtime includes basic graphics support with EGL and OpenGL ES interfaces backed by WebGL. User programs can use these interfaces to render graphics to a canvas in the browser. The implementation provides:
+
+* **EGL API** for context and surface management
+* **OpenGL ES** basic drawing operations (clear, viewport, etc.)
+* **WebGL backend** that runs on the browser's main thread
+* **Example program** demonstrating usage (`runtime/example-graphics.c`)
+
+For detailed information on using graphics, extending the API, and integration with Emscripten, see `runtime/GRAPHICS.md`.
+
+To compile a graphics program:
+```bash
+clang --target=wasm32-unknown-unknown \
+  --sysroot=$LW_INSTALL/musl \
+  -fPIC -shared \
+  -o my-app.wasm \
+  my-app.c
+```
+
+The graphics canvas will automatically appear when a program initializes the graphics subsystem.
+
 ### Docker
 The following commands should be executed in this repo root.
 
@@ -79,7 +101,7 @@ Create the containers:
 docker build -t linux-wasm-base:dev ./docker/linux-wasm-base
 docker build -t linux-wasm-contained:dev ./docker/linux-wasm-contained
 ```
-Note that the latter command will copy linux-wasm.sh, in its current state, into the container.
+Note that the latter command will copy linux-wasm.sh, patches, and runtime directories into the container.
 
 To launch a simple docker container with a mapping to host (recommended for development):
 ```
@@ -91,6 +113,23 @@ To actually build everything inside the container (mostly useful for build serve
 ```
 docker run -it -name full-linux-wasm linux-wasm-contained:dev /linux-wasm/linux-wasm.sh all
 ```
+
+#### Compiling Graphics Programs in Docker
+
+After building in Docker, you can compile graphics programs:
+
+```bash
+# In the Docker container
+./tools/compile-graphics.sh runtime/example-graphics.c
+
+# Or compile your own program
+./tools/compile-graphics.sh my-graphics-app.c
+
+# Then rebuild initramfs to include it
+./linux-wasm.sh build-initramfs
+```
+
+The compiled `.wasm` file will be automatically copied to the initramfs if busybox is built.
 
 To change workspace folder, docker run -e LW_WORKSPACE=/path/to/workspace ...blah... can be used. This may be useful together with docker volumes.
 

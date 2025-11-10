@@ -20,6 +20,25 @@
       const log = (text) => term.write(("\x1B[2m" + text + "\x1B[0m\n").replaceAll("\n", "\r\n"));
       const console_write = (data) => term.write(data);  // Pre-decoded UTF-8 data.
 
+      // Graphics support: Initialize WebGL context
+      const canvas = document.getElementById("graphics-canvas");
+      const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+      if (gl) {
+        log("WebGL context initialized successfully");
+      } else {
+        log("Warning: WebGL not available, graphics features disabled");
+      }
+      
+      // Graphics context registry (for EGL support)
+      window.wasmGraphicsContexts = {
+        gl: gl,
+        canvas: canvas,
+        contexts: new Map(),  // EGL context ID -> WebGL context
+        surfaces: new Map(),  // EGL surface ID -> canvas/offscreen
+        nextContextId: 1,
+        nextSurfaceId: 1,
+      };
+
       // This is needed for SharedArrayBuffer on modern browsers.
       if (!window.crossOriginIsolated) {
         log("Error: Server did not set correct cross-origin-isolated headers.");
@@ -41,7 +60,7 @@
         }
         const initrd = await initrd_request.arrayBuffer();
 
-        const os = await linux(worker_url, vmlinux, boot_cmdline, initrd, log, console_write);
+        const os = await linux(worker_url, vmlinux, boot_cmdline, initrd, log, console_write, window.wasmGraphicsContexts);
         term.onData(data => os.key_input(data));
       } catch (error) {
         log("Linux/Wasm failed with (" + error.name + "): " + error.message + "\n" + error.stack);
@@ -54,6 +73,10 @@
 <body>
   <h1>Linux/Wasm</h1>
   <div id="terminal" tabindex="0"></div>
+  <div id="graphics-container" style="margin-top: 20px; display: none;">
+    <h2>Graphics Output</h2>
+    <canvas id="graphics-canvas" width="800" height="600" style="border: 1px solid #333; background: #000;"></canvas>
+  </div>
   <pre>
 Examples: ls          watch uptime              head /proc/cpuinfo
           pwd         usleep 1234567            ps | grep kthreadd

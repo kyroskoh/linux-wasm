@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 /// Create a Linux machine and run it.
-const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_write) => {
+const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_write, graphics_ctx) => {
   /// Dict of online CPUs.
   const cpus = {};
 
@@ -13,6 +13,9 @@ const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_wri
 
   const text_decoder = new TextDecoder("utf-8");
   const text_encoder = new TextEncoder();
+
+  /// Graphics context (for WebGL/EGL support)
+  const graphics = graphics_ctx || null;
 
   const lock_notify = (locks, lock, count) => {
     Atomics.store(locks._memory, locks[lock], 1);
@@ -106,6 +109,47 @@ const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_wri
 
     log: (message) => {
       log(message.message);
+    },
+
+    // Graphics callbacks (EGL/OpenGL ES operations)
+    graphics_init: (message) => {
+      if (graphics && graphics.canvas) {
+        graphics.canvas.parentElement.style.display = 'block';
+        log("[Graphics]: Initialized");
+      }
+    },
+
+    graphics_swap_buffers: (message) => {
+      // WebGL automatically swaps buffers, but we can trigger a flush here if needed
+      if (graphics && graphics.gl) {
+        graphics.gl.flush();
+      }
+    },
+
+    graphics_gl_call: (message) => {
+      // Generic OpenGL call forwarding from workers
+      if (!graphics || !graphics.gl) return;
+      
+      try {
+        const gl = graphics.gl;
+        const func = gl[message.func_name];
+        if (typeof func === 'function') {
+          const result = func.apply(gl, message.args || []);
+          if (message.callback_id) {
+            // Send result back to worker if requested
+            const worker = tasks[message.task_id]?.worker;
+            if (worker) {
+              worker.postMessage({
+                method: 'graphics_callback',
+                callback_id: message.callback_id,
+                result: result
+              });
+            }
+          }
+        }
+      } catch (error) {
+        log("[Graphics]: Error in " + message.func_name + ": " + error.message);
+      }
     },
   };
 

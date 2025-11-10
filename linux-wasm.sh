@@ -218,18 +218,45 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
         gzip "$LW_INSTALL/initramfs/initramfs.cpio"
     handled=1;;&
 
+    "build-graphics-examples"|"all-graphics-examples"|"build"|"all"|"build-os")
+        echo "Building graphics examples..."
+        mkdir -p "$LW_INSTALL/graphics-examples"
+        
+        # Compile example-graphics.c
+        if [ -f "$LW_ROOT/runtime/example-graphics.c" ]; then
+            "$LW_INSTALL/llvm/bin/clang" \
+                --target=wasm32-unknown-unknown \
+                "--sysroot=$LW_INSTALL/musl" \
+                -fPIC -shared \
+                $LW_DEBUG_CFLAGS \
+                -o "$LW_INSTALL/graphics-examples/example-graphics.wasm" \
+                "$LW_ROOT/runtime/example-graphics.c"
+            echo "Built example-graphics.wasm"
+            
+            # Copy to busybox for inclusion in initramfs (if busybox is built)
+            if [ -d "$LW_INSTALL/busybox/bin" ]; then
+                cp "$LW_INSTALL/graphics-examples/example-graphics.wasm" "$LW_INSTALL/busybox/bin/"
+                echo "Copied example-graphics.wasm to busybox/bin/"
+            fi
+        fi
+        
+        # Copy graphics header for reference
+        cp "$LW_ROOT/runtime/wasm-graphics.h" "$LW_INSTALL/graphics-examples/"
+        echo "Graphics examples built successfully!"
+    handled=1;;&
+
     ""|"help")
         echo "Usage: $0 [action]"
         echo "  where action is one of:"
-        echo "    all          -- Fetch and build everything."
+        echo "    all          -- Fetch and build everything (including graphics examples)."
         echo "    fetch        -- Fetch everything."
-        echo "    build        -- Build everything (no fetching)."
+        echo "    build        -- Build everything (no fetching, includes graphics examples)."
         echo "    all-xxx      -- Fetch and build component xxx."
         echo "    fetch-xxx    -- Fetch component xxx."
         echo "    build-xxx    -- Build component xxx (no fetching)."
         echo "    build-tools  -- Build all build tool components (llvm)."
-        echo "    build-os     -- Build all OS software (excluding build tools)."
-        echo "  and components include (in order): llvm, kernel, musl, busybox-kernel-headers, busybox, initramfs."
+        echo "    build-os     -- Build all OS software (excluding build tools, includes graphics)."
+        echo "  and components include (in order): llvm, kernel, musl, busybox-kernel-headers, busybox, initramfs, graphics-examples."
         echo ""
         echo "Fetch will download and patch the source. Build will configure, compile and install (to a folder in the workspace)."
         echo ""
