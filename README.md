@@ -1,6 +1,8 @@
 # Scripts for Building a Linux/Wasm Operating System
 This project contains scripts to download, build and run a Linux system that can be executed on the web, using native WebAssembly (Wasm).
 
+**🎨 New:** Graphics support with EGL/OpenGL ES interface backed by WebGL! See [Graphics Documentation](runtime/GRAPHICS.md) and [Roadmap](ROADMAP.md) for what's next.
+
 These scripts can be run in the following way:
 * Directly on a host machine.
 * In a generic docker container.
