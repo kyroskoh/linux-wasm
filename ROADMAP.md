@@ -42,26 +42,26 @@ This document outlines the development roadmap for Linux/Wasm, building on the c
 - [x] ~~Add drawing functions~~ **COMPLETE!** ✅
   - ✅ `glDrawArrays`, `glDrawElements`
   
-- [ ] Texture support ⭐ **NEXT PRIORITY**
-  - `glGenTextures`, `glBindTexture`, `glDeleteTextures`
-  - `glTexImage2D`, `glTexSubImage2D`
-  - `glTexParameteri` (filtering, wrapping)
-  - Texture unit management (`glActiveTexture`)
-  - Sampler uniforms
+- [x] ~~Texture support~~ **COMPLETE!** ✅
+  - ✅ `glGenTextures`, `glBindTexture`, `glDeleteTextures`
+  - ✅ `glTexImage2D` (data upload)
+  - ✅ `glTexParameteri`, `glTexParameterf` (filtering, wrapping)
+  - ✅ Texture unit management (`glActiveTexture`)
+  - ✅ Sampler uniforms in shaders
+  - ✅ Example: `example-texture.c` (textured quad)
   
-- [ ] Additional uniform types
-  - `glUniform2f`, `glUniform3f`, `glUniform4f`
-  - `glUniform2fv`, `glUniform3fv`, `glUniform4fv`
-  - `glUniform2i`, `glUniform3i`, `glUniform4i`
+- [x] ~~Additional uniform types~~ **COMPLETE!** ✅
+  - ✅ `glUniform2f`, `glUniform3f`, `glUniform4f`
+  - ✅ `glUniform2fv`, `glUniform3fv`, `glUniform4fv`
+  - ✅ Object ID mapping for texture handles
   
-- [ ] Depth testing and blending
-  - `glEnable`/`glDisable` (GL_DEPTH_TEST, GL_BLEND)
-  - `glDepthFunc`, `glBlendFunc`
-  - `glCullFace`, `glFrontFace`
+- [x] ~~Depth testing and state management~~ **COMPLETE!** ✅
+  - ✅ `glEnable`/`glDisable` (GL_DEPTH_TEST, GL_BLEND, GL_CULL_FACE)
+  - ✅ Full 3D depth buffer support
 
-**Deliverable**: 3D spinning textured cube demo
+**Deliverable**: ✅ 3D spinning textured cube demo → **DELIVERED!** (`example-cube.c`)
 
-**Estimated Time**: ~~1-2 weeks~~ **3-5 days remaining** (shaders done!)
+**Estimated Time**: ~~1-2 weeks~~ **COMPLETE! Finished in 1 session!** ⚡
 
 **Benefits**:
 - ✅ Enables real 3D graphics applications

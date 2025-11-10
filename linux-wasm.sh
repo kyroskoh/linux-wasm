@@ -258,6 +258,42 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
             fi
         fi
         
+        # Compile example-texture.c
+        if [ -f "$LW_ROOT/runtime/examples/example-texture.c" ]; then
+            "$LW_INSTALL/llvm/bin/clang" \
+                --target=wasm32-unknown-unknown \
+                "--sysroot=$LW_INSTALL/musl" \
+                -fPIC -shared \
+                $LW_DEBUG_CFLAGS \
+                -o "$LW_INSTALL/graphics-examples/example-texture.wasm" \
+                "$LW_ROOT/runtime/examples/example-texture.c"
+            echo "Built example-texture.wasm"
+            
+            # Copy to busybox for inclusion in initramfs (if busybox is built)
+            if [ -d "$LW_INSTALL/busybox/bin" ]; then
+                cp "$LW_INSTALL/graphics-examples/example-texture.wasm" "$LW_INSTALL/busybox/bin/"
+                echo "Copied example-texture.wasm to busybox/bin/"
+            fi
+        fi
+        
+        # Compile example-cube.c
+        if [ -f "$LW_ROOT/runtime/examples/example-cube.c" ]; then
+            "$LW_INSTALL/llvm/bin/clang" \
+                --target=wasm32-unknown-unknown \
+                "--sysroot=$LW_INSTALL/musl" \
+                -fPIC -shared \
+                $LW_DEBUG_CFLAGS \
+                -o "$LW_INSTALL/graphics-examples/example-cube.wasm" \
+                "$LW_ROOT/runtime/examples/example-cube.c"
+            echo "Built example-cube.wasm"
+            
+            # Copy to busybox for inclusion in initramfs (if busybox is built)
+            if [ -d "$LW_INSTALL/busybox/bin" ]; then
+                cp "$LW_INSTALL/graphics-examples/example-cube.wasm" "$LW_INSTALL/busybox/bin/"
+                echo "Copied example-cube.wasm to busybox/bin/"
+            fi
+        fi
+        
         # Copy graphics header for reference
         cp "$LW_ROOT/runtime/wasm-graphics.h" "$LW_INSTALL/graphics-examples/"
         echo "Graphics examples built successfully!"

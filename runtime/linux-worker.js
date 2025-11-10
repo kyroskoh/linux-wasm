@@ -684,6 +684,187 @@
         value: matrix,
       });
     },
+
+    // Additional uniform functions
+    wasm_gl_uniform2f: (location, v0, v1) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "uniform2f",
+        args: [location, v0, v1],
+        is_uniform_location: true,
+      });
+    },
+
+    wasm_gl_uniform3f: (location, v0, v1, v2) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "uniform3f",
+        args: [location, v0, v1, v2],
+        is_uniform_location: true,
+      });
+    },
+
+    wasm_gl_uniform4f: (location, v0, v1, v2, v3) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "uniform4f",
+        args: [location, v0, v1, v2, v3],
+        is_uniform_location: true,
+      });
+    },
+
+    wasm_gl_uniform2fv: (location, count, value) => {
+      const memory_f32 = new Float32Array(memory.buffer);
+      const vec = Array.from(memory_f32.slice(value / 4, value / 4 + 2 * count));
+      
+      port.postMessage({
+        method: "graphics_gl_uniform_fv",
+        location: location,
+        count: count,
+        size: 2,
+        value: vec,
+      });
+    },
+
+    wasm_gl_uniform3fv: (location, count, value) => {
+      const memory_f32 = new Float32Array(memory.buffer);
+      const vec = Array.from(memory_f32.slice(value / 4, value / 4 + 3 * count));
+      
+      port.postMessage({
+        method: "graphics_gl_uniform_fv",
+        location: location,
+        count: count,
+        size: 3,
+        value: vec,
+      });
+    },
+
+    wasm_gl_uniform4fv: (location, count, value) => {
+      const memory_f32 = new Float32Array(memory.buffer);
+      const vec = Array.from(memory_f32.slice(value / 4, value / 4 + 4 * count));
+      
+      port.postMessage({
+        method: "graphics_gl_uniform_fv",
+        location: location,
+        count: count,
+        size: 4,
+        value: vec,
+      });
+    },
+
+    // Texture functions
+    wasm_gl_gen_textures: (n, textures_ptr) => {
+      const result_buffer_i32 = new Int32Array(shared_result_buffer);
+      result_buffer_i32[0] = 0; // Reset result flag
+      
+      port.postMessage({
+        method: "graphics_gl_gen_textures",
+        n: n,
+      });
+      
+      // Wait for main thread to generate textures
+      Atomics.wait(result_buffer_i32, 0, 0);
+      
+      // Read texture IDs from result buffer
+      const memory_u32 = new Uint32Array(memory.buffer);
+      for (let i = 0; i < n; i++) {
+        memory_u32[textures_ptr / 4 + i] = result_buffer_i32[1 + i];
+      }
+    },
+
+    wasm_gl_bind_texture: (target, texture) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "bindTexture",
+        args: [target, texture],
+        is_texture: true,
+      });
+    },
+
+    wasm_gl_delete_textures: (n, textures_ptr) => {
+      const memory_u32 = new Uint32Array(memory.buffer);
+      const texture_ids = [];
+      for (let i = 0; i < n; i++) {
+        texture_ids.push(memory_u32[textures_ptr / 4 + i]);
+      }
+      
+      port.postMessage({
+        method: "graphics_gl_delete_textures",
+        texture_ids: texture_ids,
+      });
+    },
+
+    wasm_gl_tex_image_2d: (target, level, internalformat, width, height, border, format, type, data_ptr) => {
+      let data = null;
+      if (data_ptr !== 0) {
+        // Calculate the size of the texture data based on format and type
+        let bytes_per_pixel = 4; // RGBA by default
+        if (format === 0x1907) { // GL_RGB
+          bytes_per_pixel = 3;
+        } else if (format === 0x1909) { // GL_LUMINANCE
+          bytes_per_pixel = 1;
+        } else if (format === 0x190A) { // GL_LUMINANCE_ALPHA
+          bytes_per_pixel = 2;
+        }
+        
+        const size = width * height * bytes_per_pixel;
+        const memory_u8 = new Uint8Array(memory.buffer);
+        data = Array.from(memory_u8.slice(data_ptr, data_ptr + size));
+      }
+      
+      port.postMessage({
+        method: "graphics_gl_tex_image_2d",
+        target: target,
+        level: level,
+        internalformat: internalformat,
+        width: width,
+        height: height,
+        border: border,
+        format: format,
+        type: type,
+        data: data,
+      });
+    },
+
+    wasm_gl_tex_parameteri: (target, pname, param) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "texParameteri",
+        args: [target, pname, param],
+      });
+    },
+
+    wasm_gl_tex_parameterf: (target, pname, param) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "texParameterf",
+        args: [target, pname, param],
+      });
+    },
+
+    wasm_gl_active_texture: (texture) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "activeTexture",
+        args: [texture],
+      });
+    },
+
+    wasm_gl_enable: (cap) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "enable",
+        args: [cap],
+      });
+    },
+
+    wasm_gl_disable: (cap) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "disable",
+        args: [cap],
+      });
+    },
   };
 
   /// Callbacks from the main thread.

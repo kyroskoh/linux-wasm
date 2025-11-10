@@ -147,6 +147,9 @@ const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_wri
         if (message.is_uniform_location && args.length > 0) {
           args[0] = graphics.uniformLocations.get(args[0]);
         }
+        if (message.is_texture && args.length > 1) {
+          args[1] = graphics.textures.get(args[1]);
+        }
         
         const func = gl[message.func_name];
         if (typeof func === 'function') {
@@ -306,6 +309,90 @@ const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_wri
       const location = graphics.uniformLocations.get(message.location);
       if (location) {
         graphics.gl.uniformMatrix4fv(location, message.transpose, message.value);
+      }
+    },
+
+    graphics_gl_uniform_fv: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const location = graphics.uniformLocations.get(message.location);
+      if (location) {
+        // Call the appropriate uniformNfv function based on size
+        if (message.size === 2) {
+          graphics.gl.uniform2fv(location, message.value);
+        } else if (message.size === 3) {
+          graphics.gl.uniform3fv(location, message.value);
+        } else if (message.size === 4) {
+          graphics.gl.uniform4fv(location, message.value);
+        }
+      }
+    },
+
+    graphics_gl_gen_textures: (message) => {
+      if (!graphics || !graphics.gl) return;
+      
+      const texture_ids = [];
+      for (let i = 0; i < message.n; i++) {
+        const texture = graphics.gl.createTexture();
+        const id = graphics.nextTextureId++;
+        graphics.textures.set(id, texture);
+        texture_ids.push(id);
+      }
+      
+      // Write texture IDs to shared result buffer
+      const result_buffer = message.worker._result_buffer;
+      if (result_buffer) {
+        const result_i32 = new Int32Array(result_buffer);
+        for (let i = 0; i < texture_ids.length; i++) {
+          result_i32[1 + i] = texture_ids[i];
+        }
+        // Signal completion
+        result_i32[0] = 1;
+        Atomics.notify(result_i32, 0);
+      }
+    },
+
+    graphics_gl_delete_textures: (message) => {
+      if (!graphics || !graphics.gl) return;
+      
+      for (const texture_id of message.texture_ids) {
+        const texture = graphics.textures.get(texture_id);
+        if (texture) {
+          graphics.gl.deleteTexture(texture);
+          graphics.textures.delete(texture_id);
+        }
+      }
+    },
+
+    graphics_gl_tex_image_2d: (message) => {
+      if (!graphics || !graphics.gl) return;
+      
+      if (message.data === null) {
+        // Allocate empty texture
+        graphics.gl.texImage2D(
+          message.target,
+          message.level,
+          message.internalformat,
+          message.width,
+          message.height,
+          message.border,
+          message.format,
+          message.type,
+          null
+        );
+      } else {
+        // Upload texture data
+        const data = new Uint8Array(message.data);
+        graphics.gl.texImage2D(
+          message.target,
+          message.level,
+          message.internalformat,
+          message.width,
+          message.height,
+          message.border,
+          message.format,
+          message.type,
+          data
+        );
       }
     },
   };

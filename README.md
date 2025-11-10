@@ -1,7 +1,7 @@
 # Scripts for Building a Linux/Wasm Operating System
 This project contains scripts to download, build and run a Linux system that can be executed on the web, using native WebAssembly (Wasm).
 
-**🎨 New:** Full shader support with GLSL vertex/fragment shaders! Complete 3D graphics with EGL/OpenGL ES backed by WebGL. See [Shader Implementation](SHADER-IMPLEMENTATION.md), [Graphics Documentation](runtime/GRAPHICS.md), and [Roadmap](ROADMAP.md).
+**🎨 New:** Full 3D graphics with textures and depth testing! Spinning cube demo showcases complete OpenGL ES 2.0 pipeline. Includes shaders, textures, lighting, and matrix transformations. See [example-cube.c](runtime/examples/example-cube.c), [Graphics Documentation](runtime/GRAPHICS.md), and [Roadmap](ROADMAP.md).
 
 These scripts can be run in the following way:
 * Directly on a host machine.
@@ -71,25 +71,30 @@ Due to limitations in the Linux kernel's build system, the absolute path of the 
 The build system includes DWARF debug information by default, enabling line-by-line debugging in the C code (kernel, musl, BusyBox). The debug flags can be customized by setting the `LW_DEBUG_CFLAGS` environment variable (default: `-g3` for maximum debug information including macro definitions). To build without debug information, set `LW_DEBUG_CFLAGS=""` before running the build script.
 
 ### Graphics Support
-The runtime includes basic graphics support with EGL and OpenGL ES interfaces backed by WebGL. User programs can use these interfaces to render graphics to a canvas in the browser. The implementation provides:
+The runtime includes full 3D graphics support with OpenGL ES 2.0 interfaces backed by WebGL. User programs can render complex 3D scenes with shaders, textures, and lighting.
 
-* **EGL API** for context and surface management
-* **OpenGL ES** basic drawing operations (clear, viewport, etc.)
-* **WebGL backend** that runs on the browser's main thread
-* **Example program** demonstrating usage (`runtime/example-graphics.c`)
+**Core Features:**
+* **EGL API** - Context and surface management
+* **Shaders** - GLSL vertex and fragment shaders with compilation pipeline
+* **Textures** - Generation, upload, sampling with filtering/wrapping
+* **Buffers** - VBOs, EBOs, vertex attributes
+* **Uniforms** - Scalars, vectors (2f/3f/4f), matrices (mat4)
+* **Depth Testing** - Full 3D rendering with depth buffer
+* **State Management** - glEnable/glDisable for depth, blending, culling
 
-For detailed information on using graphics, extending the API, and integration with Emscripten, see `runtime/GRAPHICS.md`.
+**Example Programs:**
+* `runtime/examples/example-graphics.c` - Color animation basics
+* `runtime/examples/example-shaders.c` - Colored triangle
+* `runtime/examples/example-texture.c` - Textured quad
+* `runtime/examples/example-cube.c` - ⭐ **Spinning 3D cube**
 
-To compile a graphics program:
+**Compile Examples:**
 ```bash
-clang --target=wasm32-unknown-unknown \
-  --sysroot=$LW_INSTALL/musl \
-  -fPIC -shared \
-  -o my-app.wasm \
-  my-app.c
+./linux-wasm.sh build-graphics-examples  # Build all
+./tools/compile-graphics.sh runtime/examples/example-cube.c  # Individual
 ```
 
-The graphics canvas will automatically appear when a program initializes the graphics subsystem.
+The graphics canvas automatically appears when a program initializes graphics. See `runtime/GRAPHICS.md` and `runtime/examples/README.md` for documentation.
 
 ### Docker
 The following commands should be executed in this repo root.

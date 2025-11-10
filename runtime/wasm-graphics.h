@@ -104,6 +104,57 @@ typedef void GLvoid;
 #define GL_FALSE 0
 #define GL_TRUE 1
 
+// Texture targets
+#define GL_TEXTURE_2D 0x0DE1
+#define GL_TEXTURE_CUBE_MAP 0x8513
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X 0x8515
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X 0x8516
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y 0x8517
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y 0x8518
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z 0x8519
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 0x851A
+
+// Texture formats
+#define GL_RGB 0x1907
+#define GL_RGBA 0x1908
+#define GL_LUMINANCE 0x1909
+#define GL_LUMINANCE_ALPHA 0x190A
+#define GL_ALPHA 0x1906
+
+// Texture parameters
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#define GL_TEXTURE_WRAP_S 0x2802
+#define GL_TEXTURE_WRAP_T 0x2803
+
+// Texture filter modes
+#define GL_NEAREST 0x2600
+#define GL_LINEAR 0x2601
+#define GL_NEAREST_MIPMAP_NEAREST 0x2700
+#define GL_LINEAR_MIPMAP_NEAREST 0x2701
+#define GL_NEAREST_MIPMAP_LINEAR 0x2702
+#define GL_LINEAR_MIPMAP_LINEAR 0x2703
+
+// Texture wrap modes
+#define GL_REPEAT 0x2901
+#define GL_CLAMP_TO_EDGE 0x812F
+#define GL_MIRRORED_REPEAT 0x8370
+
+// Texture units
+#define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE2 0x84C2
+#define GL_TEXTURE3 0x84C3
+#define GL_TEXTURE4 0x84C4
+#define GL_TEXTURE5 0x84C5
+#define GL_TEXTURE6 0x84C6
+#define GL_TEXTURE7 0x84C7
+
+// Depth test
+#define GL_DEPTH_TEST 0x0B71
+#define GL_CULL_FACE 0x0B44
+#define GL_BLEND 0x0BE2
+
 // Host callback declarations (implemented in JavaScript runtime)
 __attribute__((import_module("env"), import_name("wasm_graphics_init")))
 int wasm_graphics_init(void);
@@ -218,8 +269,55 @@ void wasm_gl_uniform1f(GLint location, GLfloat v0);
 __attribute__((import_module("env"), import_name("wasm_gl_uniform1i")))
 void wasm_gl_uniform1i(GLint location, GLint v0);
 
+__attribute__((import_module("env"), import_name("wasm_gl_uniform2f")))
+void wasm_gl_uniform2f(GLint location, GLfloat v0, GLfloat v1);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform3f")))
+void wasm_gl_uniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform4f")))
+void wasm_gl_uniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform2fv")))
+void wasm_gl_uniform2fv(GLint location, GLsizei count, const GLfloat* value);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform3fv")))
+void wasm_gl_uniform3fv(GLint location, GLsizei count, const GLfloat* value);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform4fv")))
+void wasm_gl_uniform4fv(GLint location, GLsizei count, const GLfloat* value);
+
 __attribute__((import_module("env"), import_name("wasm_gl_uniform_matrix4fv")))
 void wasm_gl_uniform_matrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+
+// Texture functions
+__attribute__((import_module("env"), import_name("wasm_gl_gen_textures")))
+void wasm_gl_gen_textures(GLsizei n, GLuint* textures);
+
+__attribute__((import_module("env"), import_name("wasm_gl_bind_texture")))
+void wasm_gl_bind_texture(GLenum target, GLuint texture);
+
+__attribute__((import_module("env"), import_name("wasm_gl_delete_textures")))
+void wasm_gl_delete_textures(GLsizei n, const GLuint* textures);
+
+__attribute__((import_module("env"), import_name("wasm_gl_tex_image_2d")))
+void wasm_gl_tex_image_2d(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* data);
+
+__attribute__((import_module("env"), import_name("wasm_gl_tex_parameteri")))
+void wasm_gl_tex_parameteri(GLenum target, GLenum pname, GLint param);
+
+__attribute__((import_module("env"), import_name("wasm_gl_tex_parameterf")))
+void wasm_gl_tex_parameterf(GLenum target, GLenum pname, GLfloat param);
+
+__attribute__((import_module("env"), import_name("wasm_gl_active_texture")))
+void wasm_gl_active_texture(GLenum texture);
+
+// State functions
+__attribute__((import_module("env"), import_name("wasm_gl_enable")))
+void wasm_gl_enable(GLenum cap);
+
+__attribute__((import_module("env"), import_name("wasm_gl_disable")))
+void wasm_gl_disable(GLenum cap);
 
 // Convenience macros for EGL functions
 #define eglGetDisplay(x) wasm_egl_get_display(x)
@@ -269,7 +367,22 @@ void wasm_gl_uniform_matrix4fv(GLint location, GLsizei count, GLboolean transpos
 // Uniform macros
 #define glUniform1f(l, v) wasm_gl_uniform1f(l, v)
 #define glUniform1i(l, v) wasm_gl_uniform1i(l, v)
+#define glUniform2f(l, v0, v1) wasm_gl_uniform2f(l, v0, v1)
+#define glUniform3f(l, v0, v1, v2) wasm_gl_uniform3f(l, v0, v1, v2)
+#define glUniform4f(l, v0, v1, v2, v3) wasm_gl_uniform4f(l, v0, v1, v2, v3)
+#define glUniform2fv(l, c, v) wasm_gl_uniform2fv(l, c, v)
+#define glUniform3fv(l, c, v) wasm_gl_uniform3fv(l, c, v)
+#define glUniform4fv(l, c, v) wasm_gl_uniform4fv(l, c, v)
 #define glUniformMatrix4fv(l, c, t, v) wasm_gl_uniform_matrix4fv(l, c, t, v)
+#define glGenTextures(n, t) wasm_gl_gen_textures(n, t)
+#define glBindTexture(tg, t) wasm_gl_bind_texture(tg, t)
+#define glDeleteTextures(n, t) wasm_gl_delete_textures(n, t)
+#define glTexImage2D(tg, l, i, w, h, b, f, ty, d) wasm_gl_tex_image_2d(tg, l, i, w, h, b, f, ty, d)
+#define glTexParameteri(tg, p, v) wasm_gl_tex_parameteri(tg, p, v)
+#define glTexParameterf(tg, p, v) wasm_gl_tex_parameterf(tg, p, v)
+#define glActiveTexture(t) wasm_gl_active_texture(t)
+#define glEnable(c) wasm_gl_enable(c)
+#define glDisable(c) wasm_gl_disable(c)
 
 // Initialization helper function
 static inline int graphics_initialize(EGLDisplay *out_display, EGLSurface *out_surface, EGLContext *out_context) {

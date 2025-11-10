@@ -34,6 +34,39 @@ Complete shader pipeline demonstration with a colored triangle.
 ./tools/compile-graphics.sh runtime/examples/example-shaders.c
 ```
 
+### example-texture.c
+Textured quad rendering with procedural checkerboard texture.
+
+**Features:**
+- Texture generation (glGenTextures)
+- Texture uploading (glTexImage2D)
+- Texture parameters (filtering, wrapping)
+- Texture coordinates
+- Sampler uniforms
+- Element buffer objects (EBO)
+
+**Compile:**
+```bash
+./tools/compile-graphics.sh runtime/examples/example-texture.c
+```
+
+### example-cube.c ⭐ **Showcase Demo**
+Spinning 3D textured cube with lighting and depth testing.
+
+**Features:**
+- Full 3D transformations (Model-View-Projection matrices)
+- Depth testing (GL_DEPTH_TEST)
+- Textured cube (6 faces)
+- Per-vertex normals for lighting
+- Procedural texture generation
+- Smooth rotation animation
+- Matrix math (perspective, rotation, translation)
+
+**Compile:**
+```bash
+./tools/compile-graphics.sh runtime/examples/example-cube.c
+```
+
 ## Creating Your Own Examples
 
 1. Create a new `.c` file in this directory
@@ -44,9 +77,13 @@ Complete shader pipeline demonstration with a colored triangle.
 ## API Reference
 
 See `../wasm-graphics.h` for the complete graphics API including:
-- EGL functions (display, context, surface management)
-- OpenGL ES functions (shaders, buffers, drawing, etc.)
-- Helper functions and macros
+- **EGL functions** - Display, context, surface management
+- **Shaders** - Create, compile, link programs
+- **Buffers** - VBOs, EBOs, vertex attributes
+- **Textures** - Generate, bind, upload, sample (NEW!)
+- **Uniforms** - 1f, 2f, 3f, 4f, matrix4fv (NEW!)
+- **Drawing** - Arrays, elements
+- **State** - Depth test, culling, blending (NEW!)
 
 ## Documentation
 
