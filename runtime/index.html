@@ -29,7 +29,7 @@
         log("Warning: WebGL not available, graphics features disabled");
       }
       
-      // Graphics context registry (for EGL support)
+      // Graphics context registry (for EGL support and object management)
       window.wasmGraphicsContexts = {
         gl: gl,
         canvas: canvas,
@@ -37,6 +37,15 @@
         surfaces: new Map(),  // EGL surface ID -> canvas/offscreen
         nextContextId: 1,
         nextSurfaceId: 1,
+        // WebGL object management
+        shaders: new Map(),  // Shader ID -> WebGLShader
+        programs: new Map(),  // Program ID -> WebGLProgram
+        buffers: new Map(),  // Buffer ID -> WebGLBuffer
+        uniformLocations: new Map(),  // Location ID -> WebGLUniformLocation
+        nextShaderId: 1,
+        nextProgramId: 1,
+        nextBufferId: 1,
+        nextUniformLocationId: 1,
       };
 
       // This is needed for SharedArrayBuffer on modern browsers.

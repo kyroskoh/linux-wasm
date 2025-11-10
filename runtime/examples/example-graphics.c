@@ -12,7 +12,7 @@
 //
 // To use in Linux/Wasm, copy the .wasm file to the initramfs and run it.
 
-#include "wasm-graphics.h"
+#include "../wasm-graphics.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>

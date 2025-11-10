@@ -342,6 +342,348 @@
         args: [x, y, width, height],
       });
     },
+
+    // Shader functions
+    wasm_gl_create_shader: (type) => {
+      // WebGL shader creation must return an ID
+      // Use a synchronous approach via SharedArrayBuffer
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -1);
+      
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "createShader",
+        args: [type],
+        result_buffer: result,
+      });
+      
+      // Wait for result
+      Atomics.wait(result, 0, -1);
+      return Atomics.load(result, 0);
+    },
+
+    wasm_gl_shader_source: (shader, count, string, length) => {
+      // Read shader source from memory
+      const memory_u8 = new Uint8Array(memory.buffer);
+      const memory_view = new DataView(memory.buffer);
+      
+      let source = "";
+      for (let i = 0; i < count; i++) {
+        const str_ptr = memory_view.getUint32(string + i * 4, true);
+        let str_len;
+        
+        if (length) {
+          str_len = memory_view.getInt32(length + i * 4, true);
+        } else {
+          // Null-terminated string
+          str_len = 0;
+          while (memory_u8[str_ptr + str_len]) str_len++;
+        }
+        
+        source += text_decoder.decode(memory_u8.slice(str_ptr, str_ptr + str_len));
+      }
+      
+      port.postMessage({
+        method: "graphics_gl_shader_source",
+        shader: shader,
+        source: source,
+      });
+    },
+
+    wasm_gl_compile_shader: (shader) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "compileShader",
+        args: [shader],
+        is_shader_id: true,
+      });
+    },
+
+    wasm_gl_get_shaderiv: (shader, pname, params) => {
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -999);
+      
+      port.postMessage({
+        method: "graphics_gl_get_shaderiv",
+        shader: shader,
+        pname: pname,
+        result_buffer: result,
+      });
+      
+      Atomics.wait(result, 0, -999);
+      
+      if (params) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(params, Atomics.load(result, 0), true);
+      }
+    },
+
+    wasm_gl_get_shader_info_log: (shader, max_length, length, info_log) => {
+      const result_len = new Int32Array(new SharedArrayBuffer(4));
+      const result_str = new Int8Array(new SharedArrayBuffer(max_length));
+      
+      port.postMessage({
+        method: "graphics_gl_get_shader_info_log",
+        shader: shader,
+        max_length: max_length,
+        result_len: result_len,
+        result_str: result_str,
+      });
+      
+      Atomics.wait(result_len, 0, 0);
+      
+      const log_length = Atomics.load(result_len, 0);
+      if (length) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(length, log_length, true);
+      }
+      
+      if (info_log && log_length > 0) {
+        const memory_u8 = new Uint8Array(memory.buffer);
+        memory_u8.set(new Uint8Array(result_str.buffer, 0, log_length), info_log);
+      }
+    },
+
+    // Program functions
+    wasm_gl_create_program: () => {
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -1);
+      
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "createProgram",
+        args: [],
+        result_buffer: result,
+      });
+      
+      Atomics.wait(result, 0, -1);
+      return Atomics.load(result, 0);
+    },
+
+    wasm_gl_attach_shader: (program, shader) => {
+      port.postMessage({
+        method: "graphics_gl_attach_shader",
+        program: program,
+        shader: shader,
+      });
+    },
+
+    wasm_gl_link_program: (program) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "linkProgram",
+        args: [program],
+        is_program_id: true,
+      });
+    },
+
+    wasm_gl_use_program: (program) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "useProgram",
+        args: [program],
+        is_program_id: true,
+      });
+    },
+
+    wasm_gl_get_programiv: (program, pname, params) => {
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -999);
+      
+      port.postMessage({
+        method: "graphics_gl_get_programiv",
+        program: program,
+        pname: pname,
+        result_buffer: result,
+      });
+      
+      Atomics.wait(result, 0, -999);
+      
+      if (params) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(params, Atomics.load(result, 0), true);
+      }
+    },
+
+    wasm_gl_get_program_info_log: (program, max_length, length, info_log) => {
+      const result_len = new Int32Array(new SharedArrayBuffer(4));
+      const result_str = new Int8Array(new SharedArrayBuffer(max_length));
+      
+      port.postMessage({
+        method: "graphics_gl_get_program_info_log",
+        program: program,
+        max_length: max_length,
+        result_len: result_len,
+        result_str: result_str,
+      });
+      
+      Atomics.wait(result_len, 0, 0);
+      
+      const log_length = Atomics.load(result_len, 0);
+      if (length) {
+        const memory_view = new DataView(memory.buffer);
+        memory_view.setInt32(length, log_length, true);
+      }
+      
+      if (info_log && log_length > 0) {
+        const memory_u8 = new Uint8Array(memory.buffer);
+        memory_u8.set(new Uint8Array(result_str.buffer, 0, log_length), info_log);
+      }
+    },
+
+    // Attribute and uniform functions
+    wasm_gl_get_attrib_location: (program, name) => {
+      const memory_u8 = new Uint8Array(memory.buffer);
+      const attr_name = get_cstring(memory, name);
+      
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -999);
+      
+      port.postMessage({
+        method: "graphics_gl_get_attrib_location",
+        program: program,
+        name: attr_name,
+        result_buffer: result,
+      });
+      
+      Atomics.wait(result, 0, -999);
+      return Atomics.load(result, 0);
+    },
+
+    wasm_gl_get_uniform_location: (program, name) => {
+      const attr_name = get_cstring(memory, name);
+      
+      const result = new Int32Array(new SharedArrayBuffer(4));
+      Atomics.store(result, 0, -999);
+      
+      port.postMessage({
+        method: "graphics_gl_get_uniform_location",
+        program: program,
+        name: attr_name,
+        result_buffer: result,
+      });
+      
+      Atomics.wait(result, 0, -999);
+      return Atomics.load(result, 0);
+    },
+
+    wasm_gl_enable_vertex_attrib_array: (index) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "enableVertexAttribArray",
+        args: [index],
+      });
+    },
+
+    wasm_gl_disable_vertex_attrib_array: (index) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "disableVertexAttribArray",
+        args: [index],
+      });
+    },
+
+    wasm_gl_vertex_attrib_pointer: (index, size, type, normalized, stride, pointer) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "vertexAttribPointer",
+        args: [index, size, type, normalized, stride, pointer],
+      });
+    },
+
+    // Buffer functions
+    wasm_gl_gen_buffers: (n, buffers) => {
+      const result = new Uint32Array(new SharedArrayBuffer(n * 4));
+      
+      port.postMessage({
+        method: "graphics_gl_gen_buffers",
+        n: n,
+        result_buffer: result,
+      });
+      
+      Atomics.wait(new Int32Array(result.buffer), 0, 0);
+      
+      if (buffers) {
+        const memory_view = new DataView(memory.buffer);
+        for (let i = 0; i < n; i++) {
+          memory_view.setUint32(buffers + i * 4, result[i], true);
+        }
+      }
+    },
+
+    wasm_gl_bind_buffer: (target, buffer) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "bindBuffer",
+        args: [target, buffer],
+        is_buffer_id: true,
+      });
+    },
+
+    wasm_gl_buffer_data: (target, size, data, usage) => {
+      let buffer_data = null;
+      if (data) {
+        const memory_u8 = new Uint8Array(memory.buffer);
+        buffer_data = memory_u8.slice(data, data + size);
+      }
+      
+      port.postMessage({
+        method: "graphics_gl_buffer_data",
+        target: target,
+        size: size,
+        data: buffer_data,
+        usage: usage,
+      });
+    },
+
+    // Drawing functions
+    wasm_gl_draw_arrays: (mode, first, count) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "drawArrays",
+        args: [mode, first, count],
+      });
+    },
+
+    wasm_gl_draw_elements: (mode, count, type, indices) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "drawElements",
+        args: [mode, count, type, indices],
+      });
+    },
+
+    // Uniform functions
+    wasm_gl_uniform1f: (location, v0) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "uniform1f",
+        args: [location, v0],
+        is_uniform_location: true,
+      });
+    },
+
+    wasm_gl_uniform1i: (location, v0) => {
+      port.postMessage({
+        method: "graphics_gl_call",
+        func_name: "uniform1i",
+        args: [location, v0],
+        is_uniform_location: true,
+      });
+    },
+
+    wasm_gl_uniform_matrix4fv: (location, count, transpose, value) => {
+      const memory_f32 = new Float32Array(memory.buffer);
+      const matrix = Array.from(memory_f32.slice(value / 4, value / 4 + 16 * count));
+      
+      port.postMessage({
+        method: "graphics_gl_uniform_matrix4fv",
+        location: location,
+        count: count,
+        transpose: transpose,
+        value: matrix,
+      });
+    },
   };
 
   /// Callbacks from the main thread.

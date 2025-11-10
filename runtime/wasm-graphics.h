@@ -66,13 +66,41 @@ typedef void GLvoid;
 #define GL_TRIANGLES 0x0004
 #define GL_TRIANGLE_STRIP 0x0005
 #define GL_TRIANGLE_FAN 0x0006
+#define GL_LINES 0x0001
+#define GL_LINE_STRIP 0x0003
+#define GL_POINTS 0x0000
+
+// Shader types
 #define GL_VERTEX_SHADER 0x8B31
 #define GL_FRAGMENT_SHADER 0x8B30
+
+// Shader/Program status
 #define GL_COMPILE_STATUS 0x8B81
 #define GL_LINK_STATUS 0x8B82
+#define GL_VALIDATE_STATUS 0x8B83
+#define GL_INFO_LOG_LENGTH 0x8B84
+#define GL_ATTACHED_SHADERS 0x8B85
+#define GL_ACTIVE_UNIFORMS 0x8B86
+#define GL_ACTIVE_ATTRIBUTES 0x8B89
+
+// Buffer types
 #define GL_ARRAY_BUFFER 0x8892
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+
+// Buffer usage
 #define GL_STATIC_DRAW 0x88E4
+#define GL_DYNAMIC_DRAW 0x88E8
+#define GL_STREAM_DRAW 0x88E0
+
+// Data types
+#define GL_BYTE 0x1400
+#define GL_UNSIGNED_BYTE 0x1401
+#define GL_SHORT 0x1402
+#define GL_UNSIGNED_SHORT 0x1403
+#define GL_INT 0x1404
+#define GL_UNSIGNED_INT 0x1405
 #define GL_FLOAT 0x1406
+
 #define GL_FALSE 0
 #define GL_TRUE 1
 
@@ -115,6 +143,84 @@ void wasm_gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf a
 __attribute__((import_module("env"), import_name("wasm_gl_viewport")))
 void wasm_gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
+// Shader functions
+__attribute__((import_module("env"), import_name("wasm_gl_create_shader")))
+GLuint wasm_gl_create_shader(GLenum type);
+
+__attribute__((import_module("env"), import_name("wasm_gl_shader_source")))
+void wasm_gl_shader_source(GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length);
+
+__attribute__((import_module("env"), import_name("wasm_gl_compile_shader")))
+void wasm_gl_compile_shader(GLuint shader);
+
+__attribute__((import_module("env"), import_name("wasm_gl_get_shaderiv")))
+void wasm_gl_get_shaderiv(GLuint shader, GLenum pname, GLint* params);
+
+__attribute__((import_module("env"), import_name("wasm_gl_get_shader_info_log")))
+void wasm_gl_get_shader_info_log(GLuint shader, GLsizei max_length, GLsizei* length, GLchar* info_log);
+
+// Program functions
+__attribute__((import_module("env"), import_name("wasm_gl_create_program")))
+GLuint wasm_gl_create_program(void);
+
+__attribute__((import_module("env"), import_name("wasm_gl_attach_shader")))
+void wasm_gl_attach_shader(GLuint program, GLuint shader);
+
+__attribute__((import_module("env"), import_name("wasm_gl_link_program")))
+void wasm_gl_link_program(GLuint program);
+
+__attribute__((import_module("env"), import_name("wasm_gl_use_program")))
+void wasm_gl_use_program(GLuint program);
+
+__attribute__((import_module("env"), import_name("wasm_gl_get_programiv")))
+void wasm_gl_get_programiv(GLuint program, GLenum pname, GLint* params);
+
+__attribute__((import_module("env"), import_name("wasm_gl_get_program_info_log")))
+void wasm_gl_get_program_info_log(GLuint program, GLsizei max_length, GLsizei* length, GLchar* info_log);
+
+// Attribute and uniform functions
+__attribute__((import_module("env"), import_name("wasm_gl_get_attrib_location")))
+GLint wasm_gl_get_attrib_location(GLuint program, const GLchar* name);
+
+__attribute__((import_module("env"), import_name("wasm_gl_get_uniform_location")))
+GLint wasm_gl_get_uniform_location(GLuint program, const GLchar* name);
+
+__attribute__((import_module("env"), import_name("wasm_gl_enable_vertex_attrib_array")))
+void wasm_gl_enable_vertex_attrib_array(GLuint index);
+
+__attribute__((import_module("env"), import_name("wasm_gl_disable_vertex_attrib_array")))
+void wasm_gl_disable_vertex_attrib_array(GLuint index);
+
+__attribute__((import_module("env"), import_name("wasm_gl_vertex_attrib_pointer")))
+void wasm_gl_vertex_attrib_pointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
+
+// Buffer functions
+__attribute__((import_module("env"), import_name("wasm_gl_gen_buffers")))
+void wasm_gl_gen_buffers(GLsizei n, GLuint* buffers);
+
+__attribute__((import_module("env"), import_name("wasm_gl_bind_buffer")))
+void wasm_gl_bind_buffer(GLenum target, GLuint buffer);
+
+__attribute__((import_module("env"), import_name("wasm_gl_buffer_data")))
+void wasm_gl_buffer_data(GLenum target, GLsizei size, const void* data, GLenum usage);
+
+// Drawing functions
+__attribute__((import_module("env"), import_name("wasm_gl_draw_arrays")))
+void wasm_gl_draw_arrays(GLenum mode, GLint first, GLsizei count);
+
+__attribute__((import_module("env"), import_name("wasm_gl_draw_elements")))
+void wasm_gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices);
+
+// Uniform functions
+__attribute__((import_module("env"), import_name("wasm_gl_uniform1f")))
+void wasm_gl_uniform1f(GLint location, GLfloat v0);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform1i")))
+void wasm_gl_uniform1i(GLint location, GLint v0);
+
+__attribute__((import_module("env"), import_name("wasm_gl_uniform_matrix4fv")))
+void wasm_gl_uniform_matrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+
 // Convenience macros for EGL functions
 #define eglGetDisplay(x) wasm_egl_get_display(x)
 #define eglInitialize(d, ma, mi) wasm_egl_initialize(d, ma, mi)
@@ -128,6 +234,42 @@ void wasm_gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 #define glClear(m) wasm_gl_clear(m)
 #define glClearColor(r, g, b, a) wasm_gl_clear_color(r, g, b, a)
 #define glViewport(x, y, w, h) wasm_gl_viewport(x, y, w, h)
+
+// Shader macros
+#define glCreateShader(t) wasm_gl_create_shader(t)
+#define glShaderSource(s, c, str, len) wasm_gl_shader_source(s, c, str, len)
+#define glCompileShader(s) wasm_gl_compile_shader(s)
+#define glGetShaderiv(s, p, params) wasm_gl_get_shaderiv(s, p, params)
+#define glGetShaderInfoLog(s, ml, l, log) wasm_gl_get_shader_info_log(s, ml, l, log)
+
+// Program macros
+#define glCreateProgram() wasm_gl_create_program()
+#define glAttachShader(p, s) wasm_gl_attach_shader(p, s)
+#define glLinkProgram(p) wasm_gl_link_program(p)
+#define glUseProgram(p) wasm_gl_use_program(p)
+#define glGetProgramiv(p, pn, params) wasm_gl_get_programiv(p, pn, params)
+#define glGetProgramInfoLog(p, ml, l, log) wasm_gl_get_program_info_log(p, ml, l, log)
+
+// Attribute/Uniform macros
+#define glGetAttribLocation(p, n) wasm_gl_get_attrib_location(p, n)
+#define glGetUniformLocation(p, n) wasm_gl_get_uniform_location(p, n)
+#define glEnableVertexAttribArray(i) wasm_gl_enable_vertex_attrib_array(i)
+#define glDisableVertexAttribArray(i) wasm_gl_disable_vertex_attrib_array(i)
+#define glVertexAttribPointer(i, s, t, n, st, p) wasm_gl_vertex_attrib_pointer(i, s, t, n, st, p)
+
+// Buffer macros
+#define glGenBuffers(n, b) wasm_gl_gen_buffers(n, b)
+#define glBindBuffer(t, b) wasm_gl_bind_buffer(t, b)
+#define glBufferData(t, s, d, u) wasm_gl_buffer_data(t, s, d, u)
+
+// Drawing macros
+#define glDrawArrays(m, f, c) wasm_gl_draw_arrays(m, f, c)
+#define glDrawElements(m, c, t, i) wasm_gl_draw_elements(m, c, t, i)
+
+// Uniform macros
+#define glUniform1f(l, v) wasm_gl_uniform1f(l, v)
+#define glUniform1i(l, v) wasm_gl_uniform1i(l, v)
+#define glUniformMatrix4fv(l, c, t, v) wasm_gl_uniform_matrix4fv(l, c, t, v)
 
 // Initialization helper function
 static inline int graphics_initialize(EGLDisplay *out_display, EGLSurface *out_surface, EGLContext *out_context) {

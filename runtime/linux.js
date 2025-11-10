@@ -132,23 +132,180 @@ const linux = async (worker_url, vmlinux, boot_cmdline, initrd, log, console_wri
       
       try {
         const gl = graphics.gl;
+        
+        // Map ID to actual WebGL object if needed
+        let args = message.args || [];
+        if (message.is_shader_id && args.length > 0) {
+          args[0] = graphics.shaders.get(args[0]);
+        }
+        if (message.is_program_id && args.length > 0) {
+          args[0] = graphics.programs.get(args[0]);
+        }
+        if (message.is_buffer_id && args.length > 0) {
+          args[1] = graphics.buffers.get(args[1]);
+        }
+        if (message.is_uniform_location && args.length > 0) {
+          args[0] = graphics.uniformLocations.get(args[0]);
+        }
+        
         const func = gl[message.func_name];
         if (typeof func === 'function') {
-          const result = func.apply(gl, message.args || []);
-          if (message.callback_id) {
-            // Send result back to worker if requested
-            const worker = tasks[message.task_id]?.worker;
-            if (worker) {
-              worker.postMessage({
-                method: 'graphics_callback',
-                callback_id: message.callback_id,
-                result: result
-              });
-            }
+          let result = func.apply(gl, args);
+          
+          // Handle object creation - assign IDs
+          if (message.func_name === 'createShader' && result) {
+            const id = graphics.nextShaderId++;
+            graphics.shaders.set(id, result);
+            result = id;
+          } else if (message.func_name === 'createProgram' && result) {
+            const id = graphics.nextProgramId++;
+            graphics.programs.set(id, result);
+            result = id;
+          }
+          
+          // Return result via SharedArrayBuffer if requested
+          if (message.result_buffer) {
+            Atomics.store(message.result_buffer, 0, result || 0);
+            Atomics.notify(message.result_buffer, 0, 1);
           }
         }
       } catch (error) {
         log("[Graphics]: Error in " + message.func_name + ": " + error.message);
+        if (message.result_buffer) {
+          Atomics.store(message.result_buffer, 0, 0);
+          Atomics.notify(message.result_buffer, 0, 1);
+        }
+      }
+    },
+
+    graphics_gl_shader_source: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const shader = graphics.shaders.get(message.shader);
+      if (shader) {
+        graphics.gl.shaderSource(shader, message.source);
+      }
+    },
+
+    graphics_gl_attach_shader: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const program = graphics.programs.get(message.program);
+      const shader = graphics.shaders.get(message.shader);
+      if (program && shader) {
+        graphics.gl.attachShader(program, shader);
+      }
+    },
+
+    graphics_gl_get_shaderiv: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const shader = graphics.shaders.get(message.shader);
+      if (shader) {
+        const result = graphics.gl.getShaderParameter(shader, message.pname);
+        Atomics.store(message.result_buffer, 0, result ? 1 : 0);
+        Atomics.notify(message.result_buffer, 0, 1);
+      }
+    },
+
+    graphics_gl_get_shader_info_log: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const shader = graphics.shaders.get(message.shader);
+      if (shader) {
+        const log = graphics.gl.getShaderInfoLog(shader) || "";
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(log);
+        const length = Math.min(encoded.length, message.max_length - 1);
+        
+        for (let i = 0; i < length; i++) {
+          message.result_str[i] = encoded[i];
+        }
+        message.result_str[length] = 0; // Null terminator
+        
+        Atomics.store(message.result_len, 0, length);
+        Atomics.notify(message.result_len, 0, 1);
+      }
+    },
+
+    graphics_gl_get_programiv: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const program = graphics.programs.get(message.program);
+      if (program) {
+        const result = graphics.gl.getProgramParameter(program, message.pname);
+        Atomics.store(message.result_buffer, 0, result ? 1 : 0);
+        Atomics.notify(message.result_buffer, 0, 1);
+      }
+    },
+
+    graphics_gl_get_program_info_log: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const program = graphics.programs.get(message.program);
+      if (program) {
+        const log = graphics.gl.getProgramInfoLog(program) || "";
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(log);
+        const length = Math.min(encoded.length, message.max_length - 1);
+        
+        for (let i = 0; i < length; i++) {
+          message.result_str[i] = encoded[i];
+        }
+        message.result_str[length] = 0; // Null terminator
+        
+        Atomics.store(message.result_len, 0, length);
+        Atomics.notify(message.result_len, 0, 1);
+      }
+    },
+
+    graphics_gl_get_attrib_location: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const program = graphics.programs.get(message.program);
+      if (program) {
+        const location = graphics.gl.getAttribLocation(program, message.name);
+        Atomics.store(message.result_buffer, 0, location);
+        Atomics.notify(message.result_buffer, 0, 1);
+      }
+    },
+
+    graphics_gl_get_uniform_location: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const program = graphics.programs.get(message.program);
+      if (program) {
+        const location = graphics.gl.getUniformLocation(program, message.name);
+        if (location) {
+          const id = graphics.nextUniformLocationId++;
+          graphics.uniformLocations.set(id, location);
+          Atomics.store(message.result_buffer, 0, id);
+        } else {
+          Atomics.store(message.result_buffer, 0, -1);
+        }
+        Atomics.notify(message.result_buffer, 0, 1);
+      }
+    },
+
+    graphics_gl_gen_buffers: (message) => {
+      if (!graphics || !graphics.gl) return;
+      for (let i = 0; i < message.n; i++) {
+        const buffer = graphics.gl.createBuffer();
+        const id = graphics.nextBufferId++;
+        graphics.buffers.set(id, buffer);
+        message.result_buffer[i] = id;
+      }
+      Atomics.notify(new Int32Array(message.result_buffer.buffer), 0, 1);
+    },
+
+    graphics_gl_buffer_data: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const gl = graphics.gl;
+      
+      if (message.data) {
+        gl.bufferData(message.target, message.data, message.usage);
+      } else {
+        gl.bufferData(message.target, message.size, message.usage);
+      }
+    },
+
+    graphics_gl_uniform_matrix4fv: (message) => {
+      if (!graphics || !graphics.gl) return;
+      const location = graphics.uniformLocations.get(message.location);
+      if (location) {
+        graphics.gl.uniformMatrix4fv(location, message.transpose, message.value);
       }
     },
   };

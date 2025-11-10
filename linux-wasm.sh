@@ -223,20 +223,38 @@ case "$1" in # note use of ;;& meaning that each case is re-tested (can hit mult
         mkdir -p "$LW_INSTALL/graphics-examples"
         
         # Compile example-graphics.c
-        if [ -f "$LW_ROOT/runtime/example-graphics.c" ]; then
+        if [ -f "$LW_ROOT/runtime/examples/example-graphics.c" ]; then
             "$LW_INSTALL/llvm/bin/clang" \
                 --target=wasm32-unknown-unknown \
                 "--sysroot=$LW_INSTALL/musl" \
                 -fPIC -shared \
                 $LW_DEBUG_CFLAGS \
                 -o "$LW_INSTALL/graphics-examples/example-graphics.wasm" \
-                "$LW_ROOT/runtime/example-graphics.c"
+                "$LW_ROOT/runtime/examples/example-graphics.c"
             echo "Built example-graphics.wasm"
             
             # Copy to busybox for inclusion in initramfs (if busybox is built)
             if [ -d "$LW_INSTALL/busybox/bin" ]; then
                 cp "$LW_INSTALL/graphics-examples/example-graphics.wasm" "$LW_INSTALL/busybox/bin/"
                 echo "Copied example-graphics.wasm to busybox/bin/"
+            fi
+        fi
+        
+        # Compile example-shaders.c
+        if [ -f "$LW_ROOT/runtime/examples/example-shaders.c" ]; then
+            "$LW_INSTALL/llvm/bin/clang" \
+                --target=wasm32-unknown-unknown \
+                "--sysroot=$LW_INSTALL/musl" \
+                -fPIC -shared \
+                $LW_DEBUG_CFLAGS \
+                -o "$LW_INSTALL/graphics-examples/example-shaders.wasm" \
+                "$LW_ROOT/runtime/examples/example-shaders.c"
+            echo "Built example-shaders.wasm"
+            
+            # Copy to busybox for inclusion in initramfs (if busybox is built)
+            if [ -d "$LW_INSTALL/busybox/bin" ]; then
+                cp "$LW_INSTALL/graphics-examples/example-shaders.wasm" "$LW_INSTALL/busybox/bin/"
+                echo "Copied example-shaders.wasm to busybox/bin/"
             fi
         fi
         

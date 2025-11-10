@@ -39,7 +39,7 @@ This will:
 # Inside the Docker container
 
 # Compile the example
-./tools/compile-graphics.sh runtime/example-graphics.c
+./tools/compile-graphics.sh runtime/examples/example-graphics.c
 
 # Or create and compile your own
 cat > my-graphics.c << 'EOF'

@@ -7,52 +7,67 @@ This document outlines the development roadmap for Linux/Wasm, building on the c
 - [x] **DWARF Debug Support** - Line-by-line C debugging with `-g3` flags
 - [x] **Graphics Foundation** - EGL/OpenGL ES interface with WebGL backend
 - [x] **Basic OpenGL Functions** - Clear, viewport, color operations
+- [x] **Shader Support** - Full GLSL vertex/fragment shader pipeline (31 functions!)
+- [x] **Vertex Buffers** - VBO creation, binding, and data upload
+- [x] **Shader Programs** - Compilation, linking, error checking
+- [x] **Attributes & Uniforms** - Full vertex attribute and uniform variable support
+- [x] **Drawing Functions** - glDrawArrays and glDrawElements
 - [x] **Docker Integration** - Graphics compilation in containers
-- [x] **Example Programs** - Working graphics demonstrations
+- [x] **Example Programs** - Working graphics demonstrations including shaders
 - [x] **Comprehensive Documentation** - Complete API and usage guides
 
 ## Short Term Goals (Next 2-4 weeks)
 
 ### Priority 1: Expand Graphics API 🎨
 
-**Goal**: Transform basic graphics into full 3D rendering capability
+**Goal**: Add textures and 3D capabilities on top of shader foundation
 
 **Tasks**:
-- [ ] Implement shader support
-  - `glCreateShader`, `glShaderSource`, `glCompileShader`
-  - `glCreateProgram`, `glLinkProgram`, `glUseProgram`
-  - `glGetShaderiv`, `glGetProgramiv` (error checking)
-  - Shader info log retrieval
+- [x] ~~Implement shader support~~ **COMPLETE!** ✅
+  - ✅ `glCreateShader`, `glShaderSource`, `glCompileShader`
+  - ✅ `glCreateProgram`, `glLinkProgram`, `glUseProgram`
+  - ✅ `glGetShaderiv`, `glGetProgramiv` (error checking)
+  - ✅ Shader info log retrieval
   
-- [ ] Add buffer objects
-  - `glGenBuffers`, `glDeleteBuffers`
-  - `glBindBuffer`, `glBufferData`, `glBufferSubData`
-  - Support for VBOs and IBOs
+- [x] ~~Add buffer objects~~ **COMPLETE!** ✅
+  - ✅ `glGenBuffers`, `glBindBuffer`
+  - ✅ `glBufferData` (VBO upload)
+  - ✅ Support for VBOs (IBOs ready for use)
   
-- [ ] Implement vertex attributes
-  - `glVertexAttribPointer`, `glEnableVertexAttribArray`
-  - `glGetAttribLocation`, `glGetUniformLocation`
-  - `glUniform*` family of functions
+- [x] ~~Implement vertex attributes~~ **COMPLETE!** ✅
+  - ✅ `glVertexAttribPointer`, `glEnableVertexAttribArray`
+  - ✅ `glGetAttribLocation`, `glGetUniformLocation`
+  - ✅ `glUniform1f`, `glUniform1i`, `glUniformMatrix4fv`
   
-- [ ] Add drawing functions
-  - `glDrawArrays`, `glDrawElements`
-  - `glDrawArraysInstanced` (if WebGL2)
+- [x] ~~Add drawing functions~~ **COMPLETE!** ✅
+  - ✅ `glDrawArrays`, `glDrawElements`
   
-- [ ] Texture support
-  - `glGenTextures`, `glBindTexture`
+- [ ] Texture support ⭐ **NEXT PRIORITY**
+  - `glGenTextures`, `glBindTexture`, `glDeleteTextures`
   - `glTexImage2D`, `glTexSubImage2D`
   - `glTexParameteri` (filtering, wrapping)
-  - Texture unit management
+  - Texture unit management (`glActiveTexture`)
+  - Sampler uniforms
+  
+- [ ] Additional uniform types
+  - `glUniform2f`, `glUniform3f`, `glUniform4f`
+  - `glUniform2fv`, `glUniform3fv`, `glUniform4fv`
+  - `glUniform2i`, `glUniform3i`, `glUniform4i`
+  
+- [ ] Depth testing and blending
+  - `glEnable`/`glDisable` (GL_DEPTH_TEST, GL_BLEND)
+  - `glDepthFunc`, `glBlendFunc`
+  - `glCullFace`, `glFrontFace`
 
 **Deliverable**: 3D spinning textured cube demo
 
-**Estimated Time**: 1-2 weeks
+**Estimated Time**: ~~1-2 weeks~~ **3-5 days remaining** (shaders done!)
 
 **Benefits**:
-- Enables real 3D graphics applications
-- Opens door to game development
-- Demonstrates full graphics pipeline
-- Attracts developer interest
+- ✅ Enables real 3D graphics applications
+- ✅ Opens door to game development
+- ✅ Demonstrates full graphics pipeline
+- ✅ Attracts developer interest
 
 ---
 
