@@ -3,6 +3,8 @@
 // Spinning 3D Cube Demo for Linux/Wasm
 // Demonstrates full 3D rendering with textures, depth testing, and transformations
 //
+// Author: Kyros Koh
+//
 // Compile with:
 //   $LW_INSTALL/llvm/bin/clang --target=wasm32-unknown-unknown \
 //     --sysroot=$LW_INSTALL/musl -fPIC -shared \

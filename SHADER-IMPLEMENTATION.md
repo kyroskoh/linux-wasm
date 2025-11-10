@@ -1,5 +1,7 @@
 # Shader Support Implementation Summary
 
+**Contributor**: Kyros Koh
+
 ## Overview
 
 Full shader support has been implemented for Linux/Wasm, enabling complete 3D graphics with GLSL shaders! This implementation includes vertex shaders, fragment shaders, shader programs, vertex buffers, and all the necessary infrastructure for modern OpenGL ES 2.0 rendering.

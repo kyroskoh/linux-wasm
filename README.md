@@ -140,3 +140,16 @@ The compiled `.wasm` file will be automatically copied to the initramfs if busyb
 
 To change workspace folder, docker run -e LW_WORKSPACE=/path/to/workspace ...blah... can be used. This may be useful together with docker volumes.
 
+## Contributors
+
+**Graphics System Implementation:**
+* **Kyros Koh** 
+  - OpenGL ES 2.0 graphics support, including:
+  - Full shader pipeline (GLSL vertex/fragment shaders)
+  - Texture system (generation, upload, sampling)
+  - 3D rendering with depth testing
+  - Matrix transformations and lighting
+  - Example programs (colored triangle, textured quad, spinning cube)
+  - DWARF debug support integration
+  - Documentation and build system integration
+

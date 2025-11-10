@@ -1,5 +1,7 @@
 # Graphics Implementation Summary for Linux/Wasm
 
+**Contributor**: Kyros Koh
+
 ## Overview
 
 This document summarizes the graphics support implementation added to the Linux/Wasm project. The implementation provides EGL and OpenGL ES interfaces backed by WebGL in the browser.

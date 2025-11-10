@@ -1,5 +1,7 @@
 # 🎉 Shader Support Implementation - COMPLETE!
 
+**Contributor**: Kyros Koh
+
 ## Achievement Summary
 
 **Full OpenGL ES 2.0 shader support has been successfully implemented for Linux/Wasm!**

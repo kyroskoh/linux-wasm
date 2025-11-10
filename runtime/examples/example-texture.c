@@ -3,6 +3,8 @@
 // Texture Test Program for Linux/Wasm
 // Demonstrates textured quad rendering
 //
+// Author: Kyros Koh
+//
 // Compile with:
 //   $LW_INSTALL/llvm/bin/clang --target=wasm32-unknown-unknown \
 //     --sysroot=$LW_INSTALL/musl -fPIC -shared \
